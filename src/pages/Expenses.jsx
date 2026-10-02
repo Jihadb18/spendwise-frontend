@@ -14,8 +14,19 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-
+import { toast } from "sonner";
 import api from "@/services/api";
+
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const expenseSchema = z.object({
   description: z
@@ -48,6 +59,9 @@ function Expenses() {
   const [editingExpense, setEditingExpense] = useState(null);
   const [submitting, setSubmitting] = useState(false);
 
+  const [deleteExpenseId, setDeleteExpenseId] = useState(null);
+  const [deleting, setDeleting] = useState(false);
+
   const {
     register,
     handleSubmit,
@@ -75,6 +89,7 @@ function Expenses() {
       console.error("Expenses error:", error);
 
       setError("Unable to load your expenses.");
+      toast.error("Unable to load your expenses.");
     } finally {
       setLoading(false);
     }
@@ -147,6 +162,8 @@ function Expenses() {
               : expense
           )
         );
+
+        toast.success("Expense updated successfully.");
       } else {
         const response = await api.post(
           "/expenses",
@@ -157,47 +174,66 @@ function Expenses() {
           response.data,
           ...currentExpenses,
         ]);
+
+        toast.success("Expense added successfully.");
       }
 
       closeForm();
     } catch (error) {
       console.error("Save expense error:", error);
 
-      setError(
+      const message =
         error.response?.data?.message ||
-          "Unable to save this expense."
-      );
+        "Unable to save this expense.";
+
+      setError(message);
+      toast.error(message);
     } finally {
       setSubmitting(false);
     }
   };
 
-  const handleDelete = async (id) => {
-    const confirmed = window.confirm(
-      "Are you sure you want to delete this expense?"
-    );
+  const openDeleteDialog = (id) => {
+    setDeleteExpenseId(id);
+  };
 
-    if (!confirmed) {
+  const closeDeleteDialog = () => {
+    if (!deleting) {
+      setDeleteExpenseId(null);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!deleteExpenseId) {
       return;
     }
 
     try {
+      setDeleting(true);
       setError("");
 
-      await api.delete(`/expenses/${id}`);
+      await api.delete(`/expenses/${deleteExpenseId}`);
 
       setExpenses((currentExpenses) =>
         currentExpenses.filter(
-          (expense) => expense.id !== id
+          (expense) => expense.id !== deleteExpenseId
         )
       );
+
+      toast.success("Expense deleted successfully.");
+
+      setDeleteExpenseId(null);
     } catch (error) {
       console.error("Delete expense error:", error);
 
-      setError(
+      const message =
         error.response?.data?.message ||
-          "Unable to delete this expense."
-      );
+        "Unable to delete this expense.";
+
+      setError(message);
+      toast.error(message);
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -446,7 +482,7 @@ function Expenses() {
                             variant="ghost"
                             size="icon"
                             onClick={() =>
-                              handleDelete(expense.id)
+                              openDeleteDialog(expense.id)
                             }
                           >
                             <Trash2 className="h-4 w-4 text-destructive" />
@@ -461,6 +497,49 @@ function Expenses() {
           )}
         </CardContent>
       </Card>
+
+      {/* Delete Confirmation */}
+      <AlertDialog
+        open={deleteExpenseId !== null}
+        onOpenChange={(open) => {
+          if (!open && !deleting) {
+            setDeleteExpenseId(null);
+          }
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              Delete expense?
+            </AlertDialogTitle>
+
+            <AlertDialogDescription>
+              This action cannot be undone. This expense will
+              be permanently deleted from your account.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+
+          <AlertDialogFooter>
+            <AlertDialogCancel
+              disabled={deleting}
+              onClick={closeDeleteDialog}
+            >
+              Cancel
+            </AlertDialogCancel>
+
+            <AlertDialogAction
+              onClick={(event) => {
+                event.preventDefault();
+                handleDelete();
+              }}
+              disabled={deleting}
+              className="bg-destructive text-white hover:bg-destructive/90"
+            >
+              {deleting ? "Deleting..." : "Delete"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

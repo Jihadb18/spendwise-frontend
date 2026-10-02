@@ -1,10 +1,75 @@
-import { Link } from "react-router-dom";
+
+import { Link, useNavigate } from "react-router-dom";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { toast } from "sonner";
+
+import api from "@/services/api";
+
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
+const registerSchema = z.object({
+  name: z
+    .string()
+    .min(2, "Name must contain at least 2 characters"),
+
+  email: z
+    .string()
+    .email("Please enter a valid email address"),
+
+  password: z
+    .string()
+    .min(6, "Password must contain at least 6 characters"),
+});
+
 function Register() {
+  const navigate = useNavigate();
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm({
+    resolver: zodResolver(registerSchema),
+    defaultValues: {
+      name: "",
+      email: "",
+      password: "",
+    },
+  });
+
+  const onSubmit = async (data) => {
+    try {
+      await api.post("/users", {
+        name: data.name,
+        email: data.email,
+        password: data.password,
+      });
+
+      toast.success("Account created successfully.");
+
+      navigate("/login");
+    } catch (error) {
+      console.error(error);
+
+      const message =
+        error.response?.data?.message ||
+        error.response?.data?.error ||
+        "Unable to create your account.";
+
+      toast.error(message);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-slate-950 flex">
 
@@ -47,7 +112,10 @@ function Register() {
           </CardHeader>
 
           <CardContent>
-            <form className="space-y-5">
+            <form
+              onSubmit={handleSubmit(onSubmit)}
+              className="space-y-5"
+            >
 
               <div className="space-y-2">
                 <Label htmlFor="name">
@@ -58,7 +126,15 @@ function Register() {
                   id="name"
                   type="text"
                   placeholder="Your name"
+                  {...register("name")}
+                  disabled={isSubmitting}
                 />
+
+                {errors.name && (
+                  <p className="text-sm text-red-500">
+                    {errors.name.message}
+                  </p>
+                )}
               </div>
 
               <div className="space-y-2">
@@ -70,7 +146,15 @@ function Register() {
                   id="email"
                   type="email"
                   placeholder="you@example.com"
+                  {...register("email")}
+                  disabled={isSubmitting}
                 />
+
+                {errors.email && (
+                  <p className="text-sm text-red-500">
+                    {errors.email.message}
+                  </p>
+                )}
               </div>
 
               <div className="space-y-2">
@@ -82,11 +166,25 @@ function Register() {
                   id="password"
                   type="password"
                   placeholder="••••••••"
+                  {...register("password")}
+                  disabled={isSubmitting}
                 />
+
+                {errors.password && (
+                  <p className="text-sm text-red-500">
+                    {errors.password.message}
+                  </p>
+                )}
               </div>
 
-              <Button className="w-full" type="submit">
-                Create account
+              <Button
+                className="w-full"
+                type="submit"
+                disabled={isSubmitting}
+              >
+                {isSubmitting
+                  ? "Creating account..."
+                  : "Create account"}
               </Button>
 
             </form>

@@ -1,4 +1,5 @@
 
+import { useState } from "react";
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard,
@@ -6,18 +7,29 @@ import {
   Wallet,
   Receipt,
   CircleDollarSign,
+  Target,
+  RefreshCw,
+  User,
+  Menu,
+  X,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
+import ThemeToggle from "@/components/ThemeToggle";
 
 function DashboardLayout() {
   const navigate = useNavigate();
   const { logout } = useAuth();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const handleLogout = () => {
     logout();
     navigate("/login");
+  };
+
+  const closeMobileMenu = () => {
+    setMobileMenuOpen(false);
   };
 
   const navLinkClass = ({ isActive }) =>
@@ -28,13 +40,15 @@ function DashboardLayout() {
     }`;
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      {/* Sidebar */}
-      <aside className="fixed inset-y-0 left-0 hidden w-64 border-r bg-white lg:flex lg:flex-col">
+    <div className="min-h-screen bg-background text-foreground">
+
+      {/* Desktop Sidebar */}
+      <aside className="fixed inset-y-0 left-0 hidden w-64 border-r bg-sidebar lg:flex lg:flex-col">
+
         {/* Logo */}
         <div className="flex h-16 items-center gap-2 border-b px-6">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-900">
-            <Wallet className="h-5 w-5 text-white" />
+          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary">
+            <Wallet className="h-5 w-5 text-primary-foreground" />
           </div>
 
           <span className="text-xl font-bold tracking-tight">
@@ -44,28 +58,35 @@ function DashboardLayout() {
 
         {/* Navigation */}
         <nav className="flex-1 space-y-2 p-4">
-          <NavLink
-            to="/dashboard"
-            className={navLinkClass}
-          >
+          <NavLink to="/dashboard" className={navLinkClass}>
             <LayoutDashboard className="h-4 w-4" />
             Dashboard
           </NavLink>
 
-          <NavLink
-            to="/expenses"
-            className={navLinkClass}
-          >
+          <NavLink to="/expenses" className={navLinkClass}>
             <Receipt className="h-4 w-4" />
             Expenses
           </NavLink>
-          <NavLink
-  to="/income"
-  className={navLinkClass}
->
-  <CircleDollarSign className="h-4 w-4" />
-  Income
-</NavLink>
+
+          <NavLink to="/income" className={navLinkClass}>
+            <CircleDollarSign className="h-4 w-4" />
+            Income
+          </NavLink>
+
+          <NavLink to="/budgets" className={navLinkClass}>
+            <Target className="h-4 w-4" />
+            Budgets
+          </NavLink>
+
+          <NavLink to="/subscriptions" className={navLinkClass}>
+            <RefreshCw className="h-4 w-4" />
+            Subscriptions
+          </NavLink>
+
+          <NavLink to="/profile" className={navLinkClass}>
+            <User className="h-4 w-4" />
+            Profile
+          </NavLink>
         </nav>
 
         {/* Logout */}
@@ -81,10 +102,130 @@ function DashboardLayout() {
         </div>
       </aside>
 
+      {/* Mobile Overlay */}
+      {mobileMenuOpen && (
+        <div
+          className="fixed inset-0 z-40 bg-black/40 lg:hidden"
+          onClick={closeMobileMenu}
+        />
+      )}
+
+      {/* Mobile Sidebar */}
+      <aside
+        className={`fixed inset-y-0 left-0 z-50 w-64 border-r bg-sidebar transition-transform duration-300 lg:hidden ${
+          mobileMenuOpen
+            ? "translate-x-0"
+            : "-translate-x-full"
+        }`}
+      >
+        {/* Mobile Logo */}
+        <div className="flex h-16 items-center justify-between border-b px-4">
+          <div className="flex items-center gap-2">
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary">
+              <Wallet className="h-5 w-5 text-primary-foreground" />
+            </div>
+
+            <span className="text-xl font-bold tracking-tight">
+              SpendWise
+            </span>
+          </div>
+
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={closeMobileMenu}
+          >
+            <X className="h-5 w-5" />
+          </Button>
+        </div>
+
+        {/* Mobile Navigation */}
+        <nav className="space-y-2 p-4">
+          <NavLink
+            to="/dashboard"
+            className={navLinkClass}
+            onClick={closeMobileMenu}
+          >
+            <LayoutDashboard className="h-4 w-4" />
+            Dashboard
+          </NavLink>
+
+          <NavLink
+            to="/expenses"
+            className={navLinkClass}
+            onClick={closeMobileMenu}
+          >
+            <Receipt className="h-4 w-4" />
+            Expenses
+          </NavLink>
+
+          <NavLink
+            to="/income"
+            className={navLinkClass}
+            onClick={closeMobileMenu}
+          >
+            <CircleDollarSign className="h-4 w-4" />
+            Income
+          </NavLink>
+
+          <NavLink
+            to="/budgets"
+            className={navLinkClass}
+            onClick={closeMobileMenu}
+          >
+            <Target className="h-4 w-4" />
+            Budgets
+          </NavLink>
+
+          <NavLink
+            to="/subscriptions"
+            className={navLinkClass}
+            onClick={closeMobileMenu}
+          >
+            <RefreshCw className="h-4 w-4" />
+            Subscriptions
+          </NavLink>
+
+          <NavLink
+            to="/profile"
+            className={navLinkClass}
+            onClick={closeMobileMenu}
+          >
+            <User className="h-4 w-4" />
+            Profile
+          </NavLink>
+        </nav>
+
+        {/* Mobile Logout */}
+        <div className="absolute bottom-0 w-full border-t p-4">
+          <Button
+            variant="ghost"
+            className="w-full justify-start gap-3"
+            onClick={handleLogout}
+          >
+            <LogOut className="h-4 w-4" />
+            Logout
+          </Button>
+        </div>
+      </aside>
+
       {/* Main */}
       <div className="lg:pl-64">
-        <header className="flex h-16 items-center border-b bg-white px-6">
-          <div>
+
+        {/* Header */}
+        <header className="flex h-16 items-center border-b bg-background px-4 sm:px-6">
+
+          {/* Mobile Menu Button */}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="mr-3 lg:hidden"
+            onClick={() => setMobileMenuOpen(true)}
+          >
+            <Menu className="h-5 w-5" />
+          </Button>
+
+          <div className="flex-1">
             <h1 className="text-lg font-semibold">
               SpendWise
             </h1>
@@ -93,11 +234,16 @@ function DashboardLayout() {
               Overview of your finances
             </p>
           </div>
+
+          {/* Theme Toggle */}
+          <ThemeToggle />
         </header>
 
-        <main className="p-6">
+        {/* Page Content */}
+        <main className="p-4 sm:p-6">
           <Outlet />
         </main>
+
       </div>
     </div>
   );

@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { Pencil, Plus, Trash2 } from "lucide-react";
 import { useForm } from "react-hook-form";
@@ -16,7 +15,19 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
+import { toast } from "sonner";
 import api from "@/services/api";
+
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const incomeSchema = z.object({
   source: z
@@ -45,6 +56,9 @@ function Income() {
   const [editingIncome, setEditingIncome] = useState(null);
   const [submitting, setSubmitting] = useState(false);
 
+  const [deleteIncomeId, setDeleteIncomeId] = useState(null);
+  const [deleting, setDeleting] = useState(false);
+
   const {
     register,
     handleSubmit,
@@ -71,6 +85,7 @@ function Income() {
       console.error("Income error:", error);
 
       setError("Unable to load your income.");
+      toast.error("Unable to load your income.");
     } finally {
       setLoading(false);
     }
@@ -139,6 +154,8 @@ function Income() {
               : income
           )
         );
+
+        toast.success("Income updated successfully.");
       } else {
         const response = await api.post(
           "/incomes",
@@ -149,47 +166,66 @@ function Income() {
           response.data,
           ...currentIncomes,
         ]);
+
+        toast.success("Income added successfully.");
       }
 
       closeForm();
     } catch (error) {
       console.error("Save income error:", error);
 
-      setError(
+      const message =
         error.response?.data?.message ||
-          "Unable to save this income."
-      );
+        "Unable to save this income.";
+
+      setError(message);
+      toast.error(message);
     } finally {
       setSubmitting(false);
     }
   };
 
-  const handleDelete = async (id) => {
-    const confirmed = window.confirm(
-      "Are you sure you want to delete this income?"
-    );
+  const openDeleteDialog = (id) => {
+    setDeleteIncomeId(id);
+  };
 
-    if (!confirmed) {
+  const closeDeleteDialog = () => {
+    if (!deleting) {
+      setDeleteIncomeId(null);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!deleteIncomeId) {
       return;
     }
 
     try {
+      setDeleting(true);
       setError("");
 
-      await api.delete(`/incomes/${id}`);
+      await api.delete(`/incomes/${deleteIncomeId}`);
 
       setIncomes((currentIncomes) =>
         currentIncomes.filter(
-          (income) => income.id !== id
+          (income) => income.id !== deleteIncomeId
         )
       );
+
+      toast.success("Income deleted successfully.");
+
+      setDeleteIncomeId(null);
     } catch (error) {
       console.error("Delete income error:", error);
 
-      setError(
+      const message =
         error.response?.data?.message ||
-          "Unable to delete this income."
-      );
+        "Unable to delete this income.";
+
+      setError(message);
+      toast.error(message);
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -411,7 +447,7 @@ function Income() {
                             variant="ghost"
                             size="icon"
                             onClick={() =>
-                              handleDelete(income.id)
+                              openDeleteDialog(income.id)
                             }
                           >
                             <Trash2 className="h-4 w-4 text-destructive" />
@@ -426,6 +462,49 @@ function Income() {
           )}
         </CardContent>
       </Card>
+
+      {/* Delete Confirmation */}
+      <AlertDialog
+        open={deleteIncomeId !== null}
+        onOpenChange={(open) => {
+          if (!open && !deleting) {
+            setDeleteIncomeId(null);
+          }
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              Delete income?
+            </AlertDialogTitle>
+
+            <AlertDialogDescription>
+              This action cannot be undone. This income will
+              be permanently deleted from your account.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+
+          <AlertDialogFooter>
+            <AlertDialogCancel
+              disabled={deleting}
+              onClick={closeDeleteDialog}
+            >
+              Cancel
+            </AlertDialogCancel>
+
+            <AlertDialogAction
+              onClick={(event) => {
+                event.preventDefault();
+                handleDelete();
+              }}
+              disabled={deleting}
+              className="bg-destructive text-white hover:bg-destructive/90"
+            >
+              {deleting ? "Deleting..." : "Delete"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

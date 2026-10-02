@@ -11,6 +11,10 @@ import Dashboard from "./pages/Dashboard";
 import DashboardLayout from "./layouts/DashboardLayout";
 import Expenses from "./pages/Expenses";
 import Income from "./pages/Income";
+import Budgets from "./pages/Budgets";
+import Subscriptions from "./pages/Subscriptions";
+import Profile from "./pages/Profile";
+import ProtectedRoute from "./components/ProtectedRoute";
 function App() {
   return (
     <BrowserRouter>
@@ -21,10 +25,15 @@ function App() {
 
         <Route path="/register" element={<Register />} />
 
-        <Route element={<DashboardLayout />}>
-  <Route path="/dashboard" element={<Dashboard />} />
-  <Route path="/expenses" element={<Expenses />} />
-  <Route path="/income" element={<Income />} />
+   <Route element={<ProtectedRoute />}>
+  <Route element={<DashboardLayout />}>
+    <Route path="/dashboard" element={<Dashboard />} />
+    <Route path="/expenses" element={<Expenses />} />
+    <Route path="/income" element={<Income />} />
+    <Route path="/budgets" element={<Budgets />} />
+    <Route path="/subscriptions" element={<Subscriptions />} />
+    <Route path="/profile" element={<Profile />} />
+  </Route>
 </Route>
       </Routes>
     </BrowserRouter>
