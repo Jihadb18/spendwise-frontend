@@ -1,6 +1,11 @@
 
-import { useState } from "react";
-import { NavLink, Outlet, useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import {
+  NavLink,
+  Outlet,
+  useNavigate,
+} from "react-router-dom";
+
 import {
   LayoutDashboard,
   LogOut,
@@ -14,14 +19,32 @@ import {
   X,
 } from "lucide-react";
 
+import { useTranslation } from "react-i18next";
+
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
 import ThemeToggle from "@/components/ThemeToggle";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
 
 function DashboardLayout() {
   const navigate = useNavigate();
   const { logout } = useAuth();
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { t, i18n } = useTranslation();
+
+  const [mobileMenuOpen, setMobileMenuOpen] =
+    useState(false);
+
+  const isArabic = i18n.language === "ar";
+
+  useEffect(() => {
+    const direction = isArabic
+      ? "rtl"
+      : "ltr";
+
+    document.documentElement.dir = direction;
+    document.documentElement.lang =
+      i18n.language;
+  }, [i18n.language, isArabic]);
 
   const handleLogout = () => {
     logout();
@@ -41,10 +64,14 @@ function DashboardLayout() {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-
       {/* Desktop Sidebar */}
-      <aside className="fixed inset-y-0 left-0 hidden w-64 border-r bg-sidebar lg:flex lg:flex-col">
-
+      <aside
+        className={`fixed inset-y-0 hidden w-64 bg-sidebar lg:flex lg:flex-col ${
+          isArabic
+            ? "right-0 border-l"
+            : "left-0 border-r"
+        }`}
+      >
         {/* Logo */}
         <div className="flex h-16 items-center gap-2 border-b px-6">
           <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary">
@@ -58,34 +85,52 @@ function DashboardLayout() {
 
         {/* Navigation */}
         <nav className="flex-1 space-y-2 p-4">
-          <NavLink to="/dashboard" className={navLinkClass}>
+          <NavLink
+            to="/dashboard"
+            className={navLinkClass}
+          >
             <LayoutDashboard className="h-4 w-4" />
-            Dashboard
+            {t("navigation.dashboard")}
           </NavLink>
 
-          <NavLink to="/expenses" className={navLinkClass}>
+          <NavLink
+            to="/expenses"
+            className={navLinkClass}
+          >
             <Receipt className="h-4 w-4" />
-            Expenses
+            {t("navigation.expenses")}
           </NavLink>
 
-          <NavLink to="/income" className={navLinkClass}>
+          <NavLink
+            to="/income"
+            className={navLinkClass}
+          >
             <CircleDollarSign className="h-4 w-4" />
-            Income
+            {t("navigation.income")}
           </NavLink>
 
-          <NavLink to="/budgets" className={navLinkClass}>
+          <NavLink
+            to="/budgets"
+            className={navLinkClass}
+          >
             <Target className="h-4 w-4" />
-            Budgets
+            {t("navigation.budgets")}
           </NavLink>
 
-          <NavLink to="/subscriptions" className={navLinkClass}>
+          <NavLink
+            to="/subscriptions"
+            className={navLinkClass}
+          >
             <RefreshCw className="h-4 w-4" />
-            Subscriptions
+            {t("navigation.subscriptions")}
           </NavLink>
 
-          <NavLink to="/profile" className={navLinkClass}>
+          <NavLink
+            to="/profile"
+            className={navLinkClass}
+          >
             <User className="h-4 w-4" />
-            Profile
+            {t("navigation.profile")}
           </NavLink>
         </nav>
 
@@ -97,7 +142,7 @@ function DashboardLayout() {
             onClick={handleLogout}
           >
             <LogOut className="h-4 w-4" />
-            Logout
+            {t("navigation.logout")}
           </Button>
         </div>
       </aside>
@@ -112,10 +157,18 @@ function DashboardLayout() {
 
       {/* Mobile Sidebar */}
       <aside
-        className={`fixed inset-y-0 left-0 z-50 w-64 border-r bg-sidebar transition-transform duration-300 lg:hidden ${
-          mobileMenuOpen
-            ? "translate-x-0"
-            : "-translate-x-full"
+        className={`fixed inset-y-0 z-50 w-64 bg-sidebar transition-transform duration-300 lg:hidden ${
+          isArabic
+            ? `right-0 border-l ${
+                mobileMenuOpen
+                  ? "translate-x-0"
+                  : "translate-x-full"
+              }`
+            : `left-0 border-r ${
+                mobileMenuOpen
+                  ? "translate-x-0"
+                  : "-translate-x-full"
+              }`
         }`}
       >
         {/* Mobile Logo */}
@@ -134,6 +187,7 @@ function DashboardLayout() {
             variant="ghost"
             size="icon"
             onClick={closeMobileMenu}
+            aria-label={t("common.close")}
           >
             <X className="h-5 w-5" />
           </Button>
@@ -147,7 +201,7 @@ function DashboardLayout() {
             onClick={closeMobileMenu}
           >
             <LayoutDashboard className="h-4 w-4" />
-            Dashboard
+            {t("navigation.dashboard")}
           </NavLink>
 
           <NavLink
@@ -156,7 +210,7 @@ function DashboardLayout() {
             onClick={closeMobileMenu}
           >
             <Receipt className="h-4 w-4" />
-            Expenses
+            {t("navigation.expenses")}
           </NavLink>
 
           <NavLink
@@ -165,7 +219,7 @@ function DashboardLayout() {
             onClick={closeMobileMenu}
           >
             <CircleDollarSign className="h-4 w-4" />
-            Income
+            {t("navigation.income")}
           </NavLink>
 
           <NavLink
@@ -174,7 +228,7 @@ function DashboardLayout() {
             onClick={closeMobileMenu}
           >
             <Target className="h-4 w-4" />
-            Budgets
+            {t("navigation.budgets")}
           </NavLink>
 
           <NavLink
@@ -183,7 +237,7 @@ function DashboardLayout() {
             onClick={closeMobileMenu}
           >
             <RefreshCw className="h-4 w-4" />
-            Subscriptions
+            {t("navigation.subscriptions")}
           </NavLink>
 
           <NavLink
@@ -192,7 +246,7 @@ function DashboardLayout() {
             onClick={closeMobileMenu}
           >
             <User className="h-4 w-4" />
-            Profile
+            {t("navigation.profile")}
           </NavLink>
         </nav>
 
@@ -204,46 +258,60 @@ function DashboardLayout() {
             onClick={handleLogout}
           >
             <LogOut className="h-4 w-4" />
-            Logout
+            {t("navigation.logout")}
           </Button>
         </div>
       </aside>
 
       {/* Main */}
-      <div className="lg:pl-64">
-
+      <div
+        className={
+          isArabic
+            ? "lg:pr-64"
+            : "lg:pl-64"
+        }
+      >
         {/* Header */}
         <header className="flex h-16 items-center border-b bg-background px-4 sm:px-6">
-
           {/* Mobile Menu Button */}
           <Button
             variant="ghost"
             size="icon"
-            className="mr-3 lg:hidden"
-            onClick={() => setMobileMenuOpen(true)}
+            className={
+              isArabic
+                ? "ml-3 lg:hidden"
+                : "mr-3 lg:hidden"
+            }
+            onClick={() =>
+              setMobileMenuOpen(true)
+            }
+            aria-label={t("navigation.dashboard")}
           >
             <Menu className="h-5 w-5" />
           </Button>
 
+          {/* Header Title */}
           <div className="flex-1">
             <h1 className="text-lg font-semibold">
               SpendWise
             </h1>
 
             <p className="text-xs text-muted-foreground">
-              Overview of your finances
+              {t("dashboard.overview")}
             </p>
           </div>
 
-          {/* Theme Toggle */}
-          <ThemeToggle />
+          {/* Header Actions */}
+          <div className="flex items-center gap-2">
+            <LanguageSwitcher />
+            <ThemeToggle />
+          </div>
         </header>
 
         {/* Page Content */}
         <main className="p-4 sm:p-6">
           <Outlet />
         </main>
-
       </div>
     </div>
   );

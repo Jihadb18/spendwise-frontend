@@ -1,9 +1,11 @@
+
 import { useEffect, useState } from "react";
 import { Pencil, Plus, Trash2 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
+import { useTranslation } from "react-i18next";
 
 import api from "@/services/api";
 
@@ -29,26 +31,40 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
-const budgetSchema = z.object({
-  category: z
-    .string()
-    .min(2, "Category must contain at least 2 characters"),
-
-  amount: z
-    .string()
-    .min(1, "Amount is required")
-    .refine(
-      (value) => Number(value) > 0,
-      "Amount must be greater than 0"
-    ),
-
-  month: z.string().min(1, "Month is required"),
-});
-
 function Budgets() {
+  const { t, i18n } = useTranslation();
+
+  const budgetSchema = z.object({
+    category: z
+      .string()
+      .min(
+        2,
+        t("budget.validation.category")
+      ),
+
+    amount: z
+      .string()
+      .min(
+        1,
+        t("budget.validation.amountRequired")
+      )
+      .refine(
+        (value) => Number(value) > 0,
+        t("budget.validation.amountPositive")
+      ),
+
+    month: z
+      .string()
+      .min(
+        1,
+        t("budget.validation.month")
+      ),
+  });
+
   const [budgets, setBudgets] = useState([]);
   const [editingBudget, setEditingBudget] = useState(null);
-  const [deleteBudgetId, setDeleteBudgetId] = useState(null);
+  const [deleteBudgetId, setDeleteBudgetId] =
+    useState(null);
   const [deleting, setDeleting] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -78,41 +94,56 @@ function Budgets() {
 
       const response = await api.get("/budgets");
 
-      const budgetsWithDetails = await Promise.all(
-        response.data.map(async (budget) => {
-          try {
-            const [
-              spentResponse,
-              remainingResponse,
-              percentageResponse,
-            ] = await Promise.all([
-              api.get(`/budgets/${budget.id}/spent`),
-              api.get(`/budgets/${budget.id}/remaining`),
-              api.get(`/budgets/${budget.id}/percentage`),
-            ]);
+      const budgetsWithDetails =
+        await Promise.all(
+          response.data.map(async (budget) => {
+            try {
+              const [
+                spentResponse,
+                remainingResponse,
+                percentageResponse,
+              ] = await Promise.all([
+                api.get(
+                  `/budgets/${budget.id}/spent`
+                ),
+                api.get(
+                  `/budgets/${budget.id}/remaining`
+                ),
+                api.get(
+                  `/budgets/${budget.id}/percentage`
+                ),
+              ]);
 
-            return {
-              ...budget,
-              spent: Number(spentResponse.data),
-              remaining: Number(remainingResponse.data),
-              percentageUsed: Number(percentageResponse.data),
-            };
-          } catch {
-            return {
-              ...budget,
-              spent: 0,
-              remaining: Number(budget.amount),
-              percentageUsed: 0,
-            };
-          }
-        })
-      );
+              return {
+                ...budget,
+                spent: Number(
+                  spentResponse.data
+                ),
+                remaining: Number(
+                  remainingResponse.data
+                ),
+                percentageUsed: Number(
+                  percentageResponse.data
+                ),
+              };
+            } catch {
+              return {
+                ...budget,
+                spent: 0,
+                remaining: Number(
+                  budget.amount
+                ),
+                percentageUsed: 0,
+              };
+            }
+          })
+        );
 
       setBudgets(budgetsWithDetails);
     } catch (err) {
       console.error(err);
 
-      const message = "Failed to load budgets.";
+      const message = t("budget.errors.load");
 
       setError(message);
       toast.error(message);
@@ -152,9 +183,14 @@ function Budgets() {
 
         setEditingBudget(null);
 
-        toast.success("Budget updated successfully.");
+        toast.success(
+          t("budget.toast.updated")
+        );
       } else {
-        const response = await api.post("/budgets", payload);
+        const response = await api.post(
+          "/budgets",
+          payload
+        );
 
         const newBudget = response.data;
 
@@ -163,12 +199,16 @@ function Budgets() {
           {
             ...newBudget,
             spent: 0,
-            remaining: Number(newBudget.amount),
+            remaining: Number(
+              newBudget.amount
+            ),
             percentageUsed: 0,
           },
         ]);
 
-        toast.success("Budget added successfully.");
+        toast.success(
+          t("budget.toast.added")
+        );
       }
 
       reset({
@@ -179,7 +219,7 @@ function Budgets() {
     } catch (err) {
       console.error(err);
 
-      const message = "Failed to save budget.";
+      const message = t("budget.errors.save");
 
       setError(message);
       toast.error(message);
@@ -215,21 +255,28 @@ function Budgets() {
       setDeleting(true);
       setError("");
 
-      await api.delete(`/budgets/${deleteBudgetId}`);
+      await api.delete(
+        `/budgets/${deleteBudgetId}`
+      );
 
       setBudgets((current) =>
         current.filter(
-          (budget) => budget.id !== deleteBudgetId
+          (budget) =>
+            budget.id !== deleteBudgetId
         )
       );
 
-      toast.success("Budget deleted successfully.");
+      toast.success(
+        t("budget.toast.deleted")
+      );
 
       setDeleteBudgetId(null);
     } catch (err) {
       console.error(err);
 
-      const message = "Failed to delete budget.";
+      const message = t(
+        "budget.errors.delete"
+      );
 
       setError(message);
       toast.error(message);
@@ -250,21 +297,26 @@ function Budgets() {
 
   return (
     <div className="space-y-6">
+      {/* Header */}
       <div>
         <h1 className="text-2xl font-bold tracking-tight">
-          Budgets
+          {t("budget.title")}
         </h1>
 
         <p className="text-sm text-muted-foreground">
-          Set spending limits and track your progress.
+          {t("budget.subtitle")}
         </p>
       </div>
 
+      {/* Add / Edit Budget */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Plus className="h-5 w-5" />
-            {editingBudget ? "Edit Budget" : "Add Budget"}
+
+            {editingBudget
+              ? t("budget.editBudget")
+              : t("budget.addBudget")}
           </CardTitle>
         </CardHeader>
 
@@ -273,14 +325,17 @@ function Budgets() {
             onSubmit={handleSubmit(onSubmit)}
             className="grid gap-4 md:grid-cols-3"
           >
+            {/* Category */}
             <div className="space-y-2">
               <Label htmlFor="category">
-                Category
+                {t("budget.category")}
               </Label>
 
               <Input
                 id="category"
-                placeholder="Food"
+                placeholder={t(
+                  "budget.categoryPlaceholder"
+                )}
                 {...register("category")}
               />
 
@@ -291,9 +346,10 @@ function Budgets() {
               )}
             </div>
 
+            {/* Amount */}
             <div className="space-y-2">
               <Label htmlFor="amount">
-                Budget Amount
+                {t("budget.amount")}
               </Label>
 
               <Input
@@ -311,9 +367,10 @@ function Budgets() {
               )}
             </div>
 
+            {/* Month */}
             <div className="space-y-2">
               <Label htmlFor="month">
-                Month
+                {t("budget.month")}
               </Label>
 
               <Input
@@ -329,9 +386,12 @@ function Budgets() {
               )}
             </div>
 
+            {/* Actions */}
             <div className="flex gap-2 md:col-span-3">
               <Button type="submit">
-                {editingBudget ? "Update Budget" : "Add Budget"}
+                {editingBudget
+                  ? t("budget.updateBudget")
+                  : t("budget.addBudget")}
               </Button>
 
               {editingBudget && (
@@ -340,7 +400,7 @@ function Budgets() {
                   variant="outline"
                   onClick={handleCancelEdit}
                 >
-                  Cancel
+                  {t("common.cancel")}
                 </Button>
               )}
             </div>
@@ -348,37 +408,44 @@ function Budgets() {
         </CardContent>
       </Card>
 
+      {/* Error */}
       {error && (
         <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
           {error}
         </div>
       )}
 
+      {/* Budgets */}
       <Card>
         <CardHeader>
-          <CardTitle>Your Budgets</CardTitle>
+          <CardTitle>
+            {t("budget.yourBudgets")}
+          </CardTitle>
         </CardHeader>
 
         <CardContent>
           {loading ? (
             <p className="text-sm text-muted-foreground">
-              Loading budgets...
+              {t("budget.loading")}
             </p>
           ) : budgets.length === 0 ? (
             <div className="rounded-lg border border-dashed p-8 text-center">
               <p className="font-medium">
-                No budgets yet
+                {t("budget.noBudgets")}
               </p>
 
               <p className="mt-1 text-sm text-muted-foreground">
-                Create your first budget above.
+                {t("budget.firstBudget")}
               </p>
             </div>
           ) : (
             <div className="space-y-4">
               {budgets.map((budget) => {
                 const percentage = Math.min(
-                  Math.max(budget.percentageUsed, 0),
+                  Math.max(
+                    budget.percentageUsed,
+                    0
+                  ),
                   100
                 );
 
@@ -402,7 +469,13 @@ function Budgets() {
                               {new Date(
                                 budget.month
                               ).toLocaleDateString(
-                                "en-US",
+                                i18n.language ===
+                                  "fr"
+                                  ? "fr-FR"
+                                  : i18n.language ===
+                                      "ar"
+                                    ? "ar-MA"
+                                    : "en-US",
                                 {
                                   month: "long",
                                   year: "numeric",
@@ -413,8 +486,13 @@ function Budgets() {
 
                           <div className="text-right">
                             <p className="font-semibold">
-                              {budget.spent.toFixed(2)} /{" "}
-                              {Number(budget.amount).toFixed(2)}
+                              {budget.spent.toFixed(
+                                2
+                              )}{" "}
+                              /{" "}
+                              {Number(
+                                budget.amount
+                              ).toFixed(2)}
                             </p>
 
                             <p
@@ -424,7 +502,13 @@ function Budgets() {
                                   : "text-muted-foreground"
                               }`}
                             >
-                              {budget.percentageUsed.toFixed(1)}% used
+                              {budget.percentageUsed.toFixed(
+                                1
+                              )}
+                              %{" "}
+                              {t(
+                                "budget.used"
+                              )}
                             </p>
                           </div>
                         </div>
@@ -436,7 +520,9 @@ function Budgets() {
 
                         <div className="mt-2 flex justify-between text-xs">
                           <span className="text-muted-foreground">
-                            Remaining
+                            {t(
+                              "budget.remaining"
+                            )}
                           </span>
 
                           <span
@@ -446,7 +532,9 @@ function Budgets() {
                                 : "font-medium text-green-600"
                             }
                           >
-                            {budget.remaining.toFixed(2)}
+                            {budget.remaining.toFixed(
+                              2
+                            )}
                           </span>
                         </div>
                       </div>
@@ -455,7 +543,9 @@ function Budgets() {
                         <Button
                           variant="outline"
                           size="icon"
-                          onClick={() => handleEdit(budget)}
+                          onClick={() =>
+                            handleEdit(budget)
+                          }
                         >
                           <Pencil className="h-4 w-4" />
                         </Button>
@@ -464,7 +554,9 @@ function Budgets() {
                           variant="outline"
                           size="icon"
                           onClick={() =>
-                            openDeleteDialog(budget.id)
+                            openDeleteDialog(
+                              budget.id
+                            )
                           }
                         >
                           <Trash2 className="h-4 w-4 text-red-500" />
@@ -479,6 +571,7 @@ function Budgets() {
         </CardContent>
       </Card>
 
+      {/* Delete Confirmation */}
       <AlertDialog
         open={deleteBudgetId !== null}
         onOpenChange={(open) => {
@@ -490,12 +583,13 @@ function Budgets() {
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>
-              Delete budget?
+              {t("budget.deleteBudget")}
             </AlertDialogTitle>
 
             <AlertDialogDescription>
-              This action cannot be undone. This budget will
-              be permanently deleted from your account.
+              {t(
+                "budget.deleteDescription"
+              )}
             </AlertDialogDescription>
           </AlertDialogHeader>
 
@@ -504,7 +598,7 @@ function Budgets() {
               disabled={deleting}
               onClick={closeDeleteDialog}
             >
-              Cancel
+              {t("common.cancel")}
             </AlertDialogCancel>
 
             <AlertDialogAction
@@ -515,7 +609,9 @@ function Budgets() {
               disabled={deleting}
               className="bg-destructive text-white hover:bg-destructive/90"
             >
-              {deleting ? "Deleting..." : "Delete"}
+              {deleting
+                ? t("budget.deleting")
+                : t("common.delete")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

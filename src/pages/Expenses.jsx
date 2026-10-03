@@ -1,8 +1,10 @@
+
 import { useEffect, useState } from "react";
 import { Pencil, Plus, Trash2 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useTranslation } from "react-i18next";
 
 import {
   Card,
@@ -28,29 +30,31 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
-const expenseSchema = z.object({
-  description: z
-    .string()
-    .min(2, "Description must contain at least 2 characters."),
-
-  amount: z
-    .string()
-    .min(1, "Amount is required.")
-    .refine(
-      (value) => Number(value) > 0,
-      "Amount must be greater than 0."
-    ),
-
-  category: z
-    .string()
-    .min(2, "Category is required."),
-
-  date: z
-    .string()
-    .min(1, "Date is required."),
-});
-
 function Expenses() {
+  const { t } = useTranslation();
+
+  const expenseSchema = z.object({
+    description: z
+      .string()
+      .min(2, t("expense.validation.description")),
+
+    amount: z
+      .string()
+      .min(1, t("expense.validation.amountRequired"))
+      .refine(
+        (value) => Number(value) > 0,
+        t("expense.validation.amountPositive")
+      ),
+
+    category: z
+      .string()
+      .min(2, t("expense.validation.category")),
+
+    date: z
+      .string()
+      .min(1, t("expense.validation.date")),
+  });
+
   const [expenses, setExpenses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -88,8 +92,8 @@ function Expenses() {
     } catch (error) {
       console.error("Expenses error:", error);
 
-      setError("Unable to load your expenses.");
-      toast.error("Unable to load your expenses.");
+      setError(t("expense.errors.load"));
+      toast.error(t("expense.errors.load"));
     } finally {
       setLoading(false);
     }
@@ -163,7 +167,7 @@ function Expenses() {
           )
         );
 
-        toast.success("Expense updated successfully.");
+        toast.success(t("expense.toast.updated"));
       } else {
         const response = await api.post(
           "/expenses",
@@ -175,7 +179,7 @@ function Expenses() {
           ...currentExpenses,
         ]);
 
-        toast.success("Expense added successfully.");
+        toast.success(t("expense.toast.added"));
       }
 
       closeForm();
@@ -184,7 +188,7 @@ function Expenses() {
 
       const message =
         error.response?.data?.message ||
-        "Unable to save this expense.";
+        t("expense.errors.save");
 
       setError(message);
       toast.error(message);
@@ -220,7 +224,7 @@ function Expenses() {
         )
       );
 
-      toast.success("Expense deleted successfully.");
+      toast.success(t("expense.toast.deleted"));
 
       setDeleteExpenseId(null);
     } catch (error) {
@@ -228,7 +232,7 @@ function Expenses() {
 
       const message =
         error.response?.data?.message ||
-        "Unable to delete this expense.";
+        t("expense.errors.delete");
 
       setError(message);
       toast.error(message);
@@ -241,7 +245,7 @@ function Expenses() {
     return (
       <div className="flex min-h-[400px] items-center justify-center">
         <p className="text-sm text-muted-foreground">
-          Loading expenses...
+          {t("expense.loading")}
         </p>
       </div>
     );
@@ -249,21 +253,22 @@ function Expenses() {
 
   return (
     <div className="space-y-6">
+
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold tracking-tight">
-            Expenses
+            {t("expense.title")}
           </h2>
 
           <p className="text-sm text-muted-foreground">
-            Manage and track your expenses.
+            {t("expense.subtitle")}
           </p>
         </div>
 
         <Button onClick={openAddForm}>
           <Plus className="mr-2 h-4 w-4" />
-          Add expense
+          {t("expense.addExpense")}
         </Button>
       </div>
 
@@ -282,8 +287,8 @@ function Expenses() {
           <CardHeader>
             <CardTitle>
               {editingExpense
-                ? "Edit expense"
-                : "Add new expense"}
+                ? t("expense.editExpense")
+                : t("expense.addNewExpense")}
             </CardTitle>
           </CardHeader>
 
@@ -292,15 +297,16 @@ function Expenses() {
               onSubmit={handleSubmit(onSubmit)}
               className="space-y-5"
             >
+
               {/* Description */}
               <div className="space-y-2">
                 <Label htmlFor="description">
-                  Description
+                  {t("expense.description")}
                 </Label>
 
                 <Input
                   id="description"
-                  placeholder="e.g. Groceries"
+                  placeholder={t("expense.descriptionPlaceholder")}
                   {...register("description")}
                 />
 
@@ -314,7 +320,7 @@ function Expenses() {
               {/* Amount */}
               <div className="space-y-2">
                 <Label htmlFor="amount">
-                  Amount
+                  {t("expense.amount")}
                 </Label>
 
                 <Input
@@ -335,12 +341,12 @@ function Expenses() {
               {/* Category */}
               <div className="space-y-2">
                 <Label htmlFor="category">
-                  Category
+                  {t("expense.category")}
                 </Label>
 
                 <Input
                   id="category"
-                  placeholder="e.g. Food"
+                  placeholder={t("expense.categoryPlaceholder")}
                   {...register("category")}
                 />
 
@@ -354,7 +360,7 @@ function Expenses() {
               {/* Date */}
               <div className="space-y-2">
                 <Label htmlFor="date">
-                  Date
+                  {t("expense.date")}
                 </Label>
 
                 <Input
@@ -377,7 +383,7 @@ function Expenses() {
                   variant="outline"
                   onClick={closeForm}
                 >
-                  Cancel
+                  {t("common.cancel")}
                 </Button>
 
                 <Button
@@ -385,12 +391,13 @@ function Expenses() {
                   disabled={submitting}
                 >
                   {submitting
-                    ? "Saving..."
+                    ? t("expense.saving")
                     : editingExpense
-                      ? "Save changes"
-                      : "Add expense"}
+                      ? t("expense.saveChanges")
+                      : t("expense.addExpense")}
                 </Button>
               </div>
+
             </form>
           </CardContent>
         </Card>
@@ -400,7 +407,7 @@ function Expenses() {
       <Card>
         <CardHeader>
           <CardTitle>
-            All expenses
+            {t("expense.allExpenses")}
           </CardTitle>
         </CardHeader>
 
@@ -409,11 +416,11 @@ function Expenses() {
             <div className="flex min-h-[250px] items-center justify-center">
               <div className="text-center">
                 <p className="font-medium">
-                  No expenses yet
+                  {t("expense.noExpenses")}
                 </p>
 
                 <p className="mt-1 text-sm text-muted-foreground">
-                  Start by adding your first expense.
+                  {t("expense.firstExpense")}
                 </p>
               </div>
             </div>
@@ -423,23 +430,23 @@ function Expenses() {
                 <thead>
                   <tr className="border-b text-left">
                     <th className="px-4 py-3 font-medium">
-                      Description
+                      {t("expense.description")}
                     </th>
 
                     <th className="px-4 py-3 font-medium">
-                      Category
+                      {t("expense.category")}
                     </th>
 
                     <th className="px-4 py-3 font-medium">
-                      Date
+                      {t("expense.date")}
                     </th>
 
                     <th className="px-4 py-3 text-right font-medium">
-                      Amount
+                      {t("expense.amount")}
                     </th>
 
                     <th className="px-4 py-3 text-right font-medium">
-                      Action
+                      {t("common.actions")}
                     </th>
                   </tr>
                 </thead>
@@ -474,6 +481,7 @@ function Expenses() {
                             onClick={() =>
                               openEditForm(expense)
                             }
+                            aria-label={t("common.edit")}
                           >
                             <Pencil className="h-4 w-4" />
                           </Button>
@@ -484,6 +492,7 @@ function Expenses() {
                             onClick={() =>
                               openDeleteDialog(expense.id)
                             }
+                            aria-label={t("common.delete")}
                           >
                             <Trash2 className="h-4 w-4 text-destructive" />
                           </Button>
@@ -510,12 +519,11 @@ function Expenses() {
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>
-              Delete expense?
+              {t("expense.deleteExpense")}
             </AlertDialogTitle>
 
             <AlertDialogDescription>
-              This action cannot be undone. This expense will
-              be permanently deleted from your account.
+              {t("expense.deleteDescription")}
             </AlertDialogDescription>
           </AlertDialogHeader>
 
@@ -524,7 +532,7 @@ function Expenses() {
               disabled={deleting}
               onClick={closeDeleteDialog}
             >
-              Cancel
+              {t("common.cancel")}
             </AlertDialogCancel>
 
             <AlertDialogAction
@@ -535,11 +543,14 @@ function Expenses() {
               disabled={deleting}
               className="bg-destructive text-white hover:bg-destructive/90"
             >
-              {deleting ? "Deleting..." : "Delete"}
+              {deleting
+                ? t("expense.deleting")
+                : t("common.delete")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
     </div>
   );
 }

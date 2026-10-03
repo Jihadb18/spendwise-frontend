@@ -11,6 +11,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
+import { useTranslation } from "react-i18next";
 
 import api from "@/services/api";
 
@@ -35,27 +36,9 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
-const subscriptionSchema = z.object({
-  name: z
-    .string()
-    .min(2, "Name must contain at least 2 characters"),
-
-  amount: z
-    .string()
-    .min(1, "Amount is required")
-    .refine(
-      (value) => Number(value) > 0,
-      "Amount must be greater than 0"
-    ),
-
-  nextPaymentDate: z
-    .string()
-    .min(1, "Next payment date is required"),
-
-  frequency: z.enum(["MONTHLY", "YEARLY"]),
-});
-
 function Subscriptions() {
+  const { t, i18n } = useTranslation();
+
   const [subscriptions, setSubscriptions] = useState([]);
   const [upcomingSubscriptions, setUpcomingSubscriptions] =
     useState([]);
@@ -71,6 +54,31 @@ function Subscriptions() {
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+
+  const subscriptionSchema = z.object({
+    name: z
+      .string()
+      .min(2, t("subscription.validation.name")),
+
+    amount: z
+      .string()
+      .min(1, t("subscription.validation.amountRequired"))
+      .refine(
+        (value) => Number(value) > 0,
+        t("subscription.validation.amountPositive")
+      ),
+
+    nextPaymentDate: z
+      .string()
+      .min(1, t("subscription.validation.nextPaymentDate")),
+
+    frequency: z.enum(
+      ["MONTHLY", "YEARLY"],
+      {
+        message: t("subscription.validation.frequency"),
+      }
+    ),
+  });
 
   const {
     register,
@@ -99,7 +107,8 @@ function Subscriptions() {
       const subscriptionsResponse =
         await api.get("/subscriptions");
 
-      const subscriptionsData = subscriptionsResponse.data;
+      const subscriptionsData =
+        subscriptionsResponse.data;
 
       setSubscriptions(subscriptionsData);
 
@@ -114,17 +123,21 @@ function Subscriptions() {
       const userId = dashboardResponse.data.userId;
 
       if (userId) {
-        const [monthlyCostResponse, upcomingResponse] =
-          await Promise.all([
-            api.get(
-              `/subscriptions/user/${userId}/monthly-cost`
-            ),
-            api.get(
-              `/subscriptions/user/${userId}/upcoming`
-            ),
-          ]);
+        const [
+          monthlyCostResponse,
+          upcomingResponse,
+        ] = await Promise.all([
+          api.get(
+            `/subscriptions/user/${userId}/monthly-cost`
+          ),
+          api.get(
+            `/subscriptions/user/${userId}/upcoming`
+          ),
+        ]);
 
-        setMonthlyCost(Number(monthlyCostResponse.data));
+        setMonthlyCost(
+          Number(monthlyCostResponse.data)
+        );
 
         setUpcomingSubscriptions(
           upcomingResponse.data
@@ -133,7 +146,9 @@ function Subscriptions() {
     } catch (err) {
       console.error(err);
 
-      const message = "Failed to load subscriptions.";
+      const message = t(
+        "subscription.errors.load"
+      );
 
       setError(message);
       toast.error(message);
@@ -159,11 +174,13 @@ function Subscriptions() {
           payload
         );
 
-        const updatedSubscription = response.data;
+        const updatedSubscription =
+          response.data;
 
         setSubscriptions((current) =>
           current.map((subscription) =>
-            subscription.id === updatedSubscription.id
+            subscription.id ===
+            updatedSubscription.id
               ? updatedSubscription
               : subscription
           )
@@ -172,7 +189,7 @@ function Subscriptions() {
         setEditingSubscription(null);
 
         toast.success(
-          "Subscription updated successfully."
+          t("subscription.toast.updated")
         );
       } else {
         const response = await api.post(
@@ -186,7 +203,7 @@ function Subscriptions() {
         ]);
 
         toast.success(
-          "Subscription added successfully."
+          t("subscription.toast.added")
         );
       }
 
@@ -205,7 +222,9 @@ function Subscriptions() {
     } catch (err) {
       console.error(err);
 
-      const message = "Failed to save subscription.";
+      const message = t(
+        "subscription.errors.save"
+      );
 
       setError(message);
       toast.error(message);
@@ -217,23 +236,28 @@ function Subscriptions() {
       const dashboardResponse =
         await api.get("/dashboard");
 
-      const userId = dashboardResponse.data.userId;
+      const userId =
+        dashboardResponse.data.userId;
 
       if (!userId) {
         return;
       }
 
-      const [monthlyCostResponse, upcomingResponse] =
-        await Promise.all([
-          api.get(
-            `/subscriptions/user/${userId}/monthly-cost`
-          ),
-          api.get(
-            `/subscriptions/user/${userId}/upcoming`
-          ),
-        ]);
+      const [
+        monthlyCostResponse,
+        upcomingResponse,
+      ] = await Promise.all([
+        api.get(
+          `/subscriptions/user/${userId}/monthly-cost`
+        ),
+        api.get(
+          `/subscriptions/user/${userId}/upcoming`
+        ),
+      ]);
 
-      setMonthlyCost(Number(monthlyCostResponse.data));
+      setMonthlyCost(
+        Number(monthlyCostResponse.data)
+      );
 
       setUpcomingSubscriptions(
         upcomingResponse.data
@@ -249,7 +273,8 @@ function Subscriptions() {
     reset({
       name: subscription.name,
       amount: String(subscription.amount),
-      nextPaymentDate: subscription.nextPaymentDate,
+      nextPaymentDate:
+        subscription.nextPaymentDate,
       frequency: subscription.frequency,
     });
   };
@@ -280,12 +305,13 @@ function Subscriptions() {
       setSubscriptions((current) =>
         current.filter(
           (subscription) =>
-            subscription.id !== deleteSubscriptionId
+            subscription.id !==
+            deleteSubscriptionId
         )
       );
 
       toast.success(
-        "Subscription deleted successfully."
+        t("subscription.toast.deleted")
       );
 
       setDeleteSubscriptionId(null);
@@ -294,8 +320,9 @@ function Subscriptions() {
     } catch (err) {
       console.error(err);
 
-      const message =
-        "Failed to delete subscription.";
+      const message = t(
+        "subscription.errors.delete"
+      );
 
       setError(message);
       toast.error(message);
@@ -316,11 +343,21 @@ function Subscriptions() {
   };
 
   const formatDate = (date) => {
-    return new Date(date).toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-    });
+    const locale =
+      i18n.language === "fr"
+        ? "fr-FR"
+        : i18n.language === "ar"
+        ? "ar-MA"
+        : "en-US";
+
+    return new Date(date).toLocaleDateString(
+      locale,
+      {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      }
+    );
   };
 
   const getDaysUntilPayment = (date) => {
@@ -331,11 +368,31 @@ function Subscriptions() {
     paymentDate.setHours(0, 0, 0, 0);
 
     const difference =
-      paymentDate.getTime() - today.getTime();
+      paymentDate.getTime() -
+      today.getTime();
 
     return Math.ceil(
-      difference / (1000 * 60 * 60 * 24)
+      difference /
+        (1000 * 60 * 60 * 24)
     );
+  };
+
+  const getPaymentText = (days) => {
+    if (days === 0) {
+      return t("subscription.today");
+    }
+
+    if (days === 1) {
+      return t("subscription.tomorrow");
+    }
+
+    if (days > 1) {
+      return t("subscription.inDays", {
+        count: days,
+      });
+    }
+
+    return t("subscription.overdue");
   };
 
   return (
@@ -343,12 +400,11 @@ function Subscriptions() {
       {/* Header */}
       <div>
         <h1 className="text-2xl font-bold tracking-tight">
-          Subscriptions
+          {t("subscription.title")}
         </h1>
 
         <p className="text-sm text-muted-foreground">
-          Manage your recurring payments and upcoming
-          subscriptions.
+          {t("subscription.subtitle")}
         </p>
       </div>
 
@@ -363,7 +419,7 @@ function Subscriptions() {
 
               <div>
                 <p className="text-sm text-muted-foreground">
-                  Monthly Cost
+                  {t("subscription.monthlyCost")}
                 </p>
 
                 <p className="text-2xl font-bold">
@@ -383,7 +439,7 @@ function Subscriptions() {
 
               <div>
                 <p className="text-sm text-muted-foreground">
-                  Upcoming
+                  {t("subscription.upcoming")}
                 </p>
 
                 <p className="text-2xl font-bold">
@@ -402,8 +458,8 @@ function Subscriptions() {
             <Plus className="h-5 w-5" />
 
             {editingSubscription
-              ? "Edit Subscription"
-              : "Add Subscription"}
+              ? t("subscription.editSubscription")
+              : t("subscription.addSubscription")}
           </CardTitle>
         </CardHeader>
 
@@ -412,9 +468,10 @@ function Subscriptions() {
             onSubmit={handleSubmit(onSubmit)}
             className="grid gap-4 md:grid-cols-4"
           >
+            {/* Name */}
             <div className="space-y-2">
               <Label htmlFor="name">
-                Name
+                {t("subscription.name")}
               </Label>
 
               <Input
@@ -430,9 +487,10 @@ function Subscriptions() {
               )}
             </div>
 
+            {/* Amount */}
             <div className="space-y-2">
               <Label htmlFor="amount">
-                Amount
+                {t("subscription.amount")}
               </Label>
 
               <Input
@@ -450,27 +508,34 @@ function Subscriptions() {
               )}
             </div>
 
+            {/* Next Payment */}
             <div className="space-y-2">
               <Label htmlFor="nextPaymentDate">
-                Next Payment
+                {t("subscription.nextPayment")}
               </Label>
 
               <Input
                 id="nextPaymentDate"
                 type="date"
-                {...register("nextPaymentDate")}
+                {...register(
+                  "nextPaymentDate"
+                )}
               />
 
               {errors.nextPaymentDate && (
                 <p className="text-sm text-red-500">
-                  {errors.nextPaymentDate.message}
+                  {
+                    errors.nextPaymentDate
+                      .message
+                  }
                 </p>
               )}
             </div>
 
+            {/* Frequency */}
             <div className="space-y-2">
               <Label htmlFor="frequency">
-                Frequency
+                {t("subscription.frequency")}
               </Label>
 
               <select
@@ -479,11 +544,11 @@ function Subscriptions() {
                 className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
               >
                 <option value="MONTHLY">
-                  Monthly
+                  {t("subscription.monthly")}
                 </option>
 
                 <option value="YEARLY">
-                  Yearly
+                  {t("subscription.yearly")}
                 </option>
               </select>
 
@@ -494,11 +559,12 @@ function Subscriptions() {
               )}
             </div>
 
+            {/* Buttons */}
             <div className="flex gap-2 md:col-span-4">
               <Button type="submit">
                 {editingSubscription
-                  ? "Update Subscription"
-                  : "Add Subscription"}
+                  ? t("subscription.updateSubscription")
+                  : t("subscription.addSubscription")}
               </Button>
 
               {editingSubscription && (
@@ -507,7 +573,7 @@ function Subscriptions() {
                   variant="outline"
                   onClick={handleCancelEdit}
                 >
-                  Cancel
+                  {t("common.cancel")}
                 </Button>
               )}
             </div>
@@ -515,18 +581,19 @@ function Subscriptions() {
         </CardContent>
       </Card>
 
+      {/* Error */}
       {error && (
         <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
           {error}
         </div>
       )}
 
-      {/* Upcoming */}
+      {/* Upcoming Payments */}
       {upcomingSubscriptions.length > 0 && (
         <Card>
           <CardHeader>
             <CardTitle>
-              Upcoming Payments
+              {t("subscription.upcomingPayments")}
             </CardTitle>
           </CardHeader>
 
@@ -564,11 +631,7 @@ function Subscriptions() {
                         </p>
 
                         <p className="text-xs text-muted-foreground">
-                          {days === 0
-                            ? "Today"
-                            : days === 1
-                            ? "Tomorrow"
-                            : `In ${days} days`}
+                          {getPaymentText(days)}
                         </p>
                       </div>
                     </div>
@@ -584,23 +647,23 @@ function Subscriptions() {
       <Card>
         <CardHeader>
           <CardTitle>
-            Your Subscriptions
+            {t("subscription.yourSubscriptions")}
           </CardTitle>
         </CardHeader>
 
         <CardContent>
           {loading ? (
             <p className="text-sm text-muted-foreground">
-              Loading subscriptions...
+              {t("subscription.loading")}
             </p>
           ) : subscriptions.length === 0 ? (
             <div className="rounded-lg border border-dashed p-8 text-center">
               <p className="font-medium">
-                No subscriptions yet
+                {t("subscription.noSubscriptions")}
               </p>
 
               <p className="mt-1 text-sm text-muted-foreground">
-                Add your first subscription above.
+                {t("subscription.firstSubscription")}
               </p>
             </div>
           ) : (
@@ -609,23 +672,23 @@ function Subscriptions() {
                 <thead>
                   <tr className="border-b text-left">
                     <th className="pb-3 font-medium">
-                      Name
+                      {t("subscription.name")}
                     </th>
 
                     <th className="pb-3 font-medium">
-                      Amount
+                      {t("subscription.amount")}
                     </th>
 
                     <th className="pb-3 font-medium">
-                      Frequency
+                      {t("subscription.frequency")}
                     </th>
 
                     <th className="pb-3 font-medium">
-                      Next Payment
+                      {t("subscription.nextPayment")}
                     </th>
 
                     <th className="pb-3 text-right font-medium">
-                      Actions
+                      {t("common.actions")}
                     </th>
                   </tr>
                 </thead>
@@ -651,8 +714,12 @@ function Subscriptions() {
                           <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium">
                             {subscription.frequency ===
                             "MONTHLY"
-                              ? "Monthly"
-                              : "Yearly"}
+                              ? t(
+                                  "subscription.monthly"
+                                )
+                              : t(
+                                  "subscription.yearly"
+                                )}
                           </span>
                         </td>
 
@@ -672,6 +739,9 @@ function Subscriptions() {
                                   subscription
                                 )
                               }
+                              aria-label={t(
+                                "common.edit"
+                              )}
                             >
                               <Pencil className="h-4 w-4" />
                             </Button>
@@ -684,6 +754,9 @@ function Subscriptions() {
                                   subscription.id
                                 )
                               }
+                              aria-label={t(
+                                "common.delete"
+                              )}
                             >
                               <Trash2 className="h-4 w-4 text-red-500" />
                             </Button>
@@ -699,6 +772,7 @@ function Subscriptions() {
         </CardContent>
       </Card>
 
+      {/* Delete Dialog */}
       <AlertDialog
         open={deleteSubscriptionId !== null}
         onOpenChange={(open) => {
@@ -710,12 +784,15 @@ function Subscriptions() {
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>
-              Delete subscription?
+              {t(
+                "subscription.deleteConfirmation"
+              )}
             </AlertDialogTitle>
 
             <AlertDialogDescription>
-              This action cannot be undone. This subscription
-              will be permanently deleted from your account.
+              {t(
+                "subscription.deleteDescription"
+              )}
             </AlertDialogDescription>
           </AlertDialogHeader>
 
@@ -724,7 +801,7 @@ function Subscriptions() {
               disabled={deleting}
               onClick={closeDeleteDialog}
             >
-              Cancel
+              {t("common.cancel")}
             </AlertDialogCancel>
 
             <AlertDialogAction
@@ -735,14 +812,17 @@ function Subscriptions() {
               disabled={deleting}
               className="bg-destructive text-white hover:bg-destructive/90"
             >
-              {deleting ? "Deleting..." : "Delete"}
+              {deleting
+                ? t("subscription.deleting")
+                : t("common.delete")}
             </AlertDialogAction>
           </AlertDialogFooter>
-         </AlertDialogContent>
-        
+        </AlertDialogContent>
       </AlertDialog>
     </div>
   );
 }
 
 export default Subscriptions;
+
+

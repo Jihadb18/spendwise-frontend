@@ -6,6 +6,7 @@ import "./index.css";
 import { AuthProvider } from "./context/AuthContext.jsx";
 import { ThemeProvider } from "./context/ThemeContext.jsx";
 import { Toaster } from "sonner";
+import "./i18n";
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>

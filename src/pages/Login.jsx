@@ -1,5 +1,7 @@
+
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -12,10 +14,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 import { useAuth } from "@/context/AuthContext";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
 
 function Login() {
   const { login } = useAuth();
   const navigate = useNavigate();
+  const { t, i18n } = useTranslation();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -23,13 +27,15 @@ function Login() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
+  const isArabic = i18n.language === "ar";
+
   const handleSubmit = async (event) => {
     event.preventDefault();
 
     setError("");
 
     if (!email || !password) {
-      setError("Please enter your email and password.");
+      setError(t("auth.loginRequired"));
       return;
     }
 
@@ -37,17 +43,16 @@ function Login() {
 
     try {
       await login(email, password);
-
       navigate("/dashboard");
     } catch (error) {
       console.error("Login error:", error);
 
       if (error.response?.status === 401) {
-        setError("Invalid email or password.");
+        setError(t("auth.invalidCredentials"));
       } else if (error.response?.data?.message) {
         setError(error.response.data.message);
       } else {
-        setError("Something went wrong. Please try again.");
+        setError(t("auth.loginError"));
       }
     } finally {
       setLoading(false);
@@ -55,142 +60,143 @@ function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 flex">
-
-      {/* ================= LEFT SIDE ================= */}
-      <div className="hidden lg:flex lg:w-1/2 flex-col justify-between p-12 text-white">
-
+    <div
+      dir="ltr"
+      className={`flex min-h-screen bg-slate-950 ${
+        isArabic ? "flex-row-reverse" : "flex-row"
+      }`}
+    >
+      {/* ================= BRANDING SIDE ================= */}
+      <div className="hidden flex-col justify-between p-12 text-white lg:flex lg:w-1/2">
         {/* Logo */}
         <div>
           <div className="text-2xl font-bold tracking-tight">
             SpendWise
           </div>
 
-          <p className="mt-2 text-slate-400 max-w-md">
-            Take control of your money. Track expenses, manage budgets,
-            and understand your spending.
+          <p className="mt-2 max-w-md text-slate-400">
+            {t("auth.loginBrandDescription")}
           </p>
         </div>
 
         {/* Main message */}
-        <div>
-          <p className="text-5xl font-semibold leading-tight max-w-lg">
-            Your money.
+        <div dir={isArabic ? "rtl" : "ltr"}>
+          <p className="max-w-lg text-5xl font-semibold leading-tight">
+            {t("auth.loginHeadlineLine1")}
             <br />
-            Your goals.
+            {t("auth.loginHeadlineLine2")}
             <br />
-            Your control.
+            {t("auth.loginHeadlineLine3")}
           </p>
 
           <p className="mt-6 text-sm text-slate-500">
-            Personal finance made simple.
+            {t("auth.loginTagline")}
           </p>
         </div>
-
       </div>
 
-      {/* ================= RIGHT SIDE ================= */}
-      <div className="flex-1 flex items-center justify-center bg-slate-50 p-6">
+      {/* ================= FORM SIDE ================= */}
+      <div className="flex flex-1 flex-col bg-slate-50 p-6">
+        {/* Language */}
+        <div className="flex w-full justify-end">
+          <LanguageSwitcher />
+        </div>
 
-        <Card className="w-full max-w-md shadow-xl border-0">
+        {/* Form */}
+        <div
+          dir={isArabic ? "rtl" : "ltr"}
+          className="flex flex-1 items-center justify-center"
+        >
+          <Card className="w-full max-w-md border-0 shadow-xl">
+            <CardHeader className="space-y-2">
+              <CardTitle className="text-2xl font-semibold">
+                {t("auth.welcomeBack")}
+              </CardTitle>
 
-          {/* Header */}
-          <CardHeader className="space-y-2">
+              <p className="text-sm text-muted-foreground">
+                {t("auth.loginSubtitle")}
+              </p>
+            </CardHeader>
 
-            <CardTitle className="text-2xl font-semibold">
-              Welcome back
-            </CardTitle>
+            <CardContent>
+              <form
+                onSubmit={handleSubmit}
+                className="space-y-5"
+              >
+                {/* Email */}
+                <div className="space-y-2">
+                  <Label htmlFor="email">
+                    {t("auth.email")}
+                  </Label>
 
-            <p className="text-sm text-muted-foreground">
-              Sign in to your SpendWise account
-            </p>
-
-          </CardHeader>
-
-          {/* Form */}
-          <CardContent>
-
-            <form
-              onSubmit={handleSubmit}
-              className="space-y-5"
-            >
-
-              {/* Email */}
-              <div className="space-y-2">
-
-                <Label htmlFor="email">
-                  Email
-                </Label>
-
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="you@example.com"
-                  value={email}
-                  onChange={(event) => setEmail(event.target.value)}
-                  disabled={loading}
-                />
-
-              </div>
-
-              {/* Password */}
-              <div className="space-y-2">
-
-                <Label htmlFor="password">
-                  Password
-                </Label>
-
-                <Input
-                  id="password"
-                  type="password"
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(event) => setPassword(event.target.value)}
-                  disabled={loading}
-                />
-
-              </div>
-
-              {/* Error */}
-              {error && (
-                <div className="rounded-md bg-destructive/10 px-3 py-2">
-                  <p className="text-sm text-destructive">
-                    {error}
-                  </p>
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder={t(
+                      "auth.emailPlaceholder"
+                    )}
+                    value={email}
+                    onChange={(event) =>
+                      setEmail(event.target.value)
+                    }
+                    disabled={loading}
+                  />
                 </div>
-              )}
 
-              {/* Submit */}
-              <Button
-                className="w-full"
-                type="submit"
-                disabled={loading}
-              >
-                {loading ? "Signing in..." : "Sign in"}
-              </Button>
+                {/* Password */}
+                <div className="space-y-2">
+                  <Label htmlFor="password">
+                    {t("auth.password")}
+                  </Label>
 
-            </form>
+                  <Input
+                    id="password"
+                    type="password"
+                    placeholder="••••••••"
+                    value={password}
+                    onChange={(event) =>
+                      setPassword(event.target.value)
+                    }
+                    disabled={loading}
+                  />
+                </div>
 
-            {/* Register */}
-            <p className="mt-6 text-center text-sm text-muted-foreground">
+                {/* Error */}
+                {error && (
+                  <div className="rounded-md bg-destructive/10 px-3 py-2">
+                    <p className="text-sm text-destructive">
+                      {error}
+                    </p>
+                  </div>
+                )}
 
-              Don't have an account?{" "}
+                {/* Submit */}
+                <Button
+                  className="w-full"
+                  type="submit"
+                  disabled={loading}
+                >
+                  {loading
+                    ? t("auth.signingIn")
+                    : t("auth.login")}
+                </Button>
+              </form>
 
-              <Link
-                to="/register"
-                className="font-medium text-primary hover:underline"
-              >
-                Create one
-              </Link>
+              {/* Register */}
+              <p className="mt-6 text-center text-sm text-muted-foreground">
+                {t("auth.noAccount")}{" "}
 
-            </p>
-
-          </CardContent>
-
-        </Card>
-
+                <Link
+                  to="/register"
+                  className="font-medium text-primary hover:underline"
+                >
+                  {t("auth.createOne")}
+                </Link>
+              </p>
+            </CardContent>
+          </Card>
+        </div>
       </div>
-
     </div>
   );
 }

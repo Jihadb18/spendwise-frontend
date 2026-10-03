@@ -1,5 +1,7 @@
+
 import { useEffect, useState } from "react";
 import { ArrowDownRight, ArrowUpRight, Wallet } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import {
   PieChart,
@@ -19,6 +21,8 @@ import { Progress } from "@/components/ui/progress";
 import api from "@/services/api";
 
 function Dashboard() {
+  const { t } = useTranslation();
+
   const [dashboard, setDashboard] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -46,7 +50,7 @@ function Dashboard() {
     return (
       <div className="flex min-h-[400px] items-center justify-center">
         <p className="text-sm text-muted-foreground">
-          Loading dashboard...
+          {t("common.loading")}
         </p>
       </div>
     );
@@ -79,11 +83,11 @@ function Dashboard() {
       {/* Header */}
       <div>
         <h2 className="text-2xl font-bold tracking-tight">
-          Overview
+          {t("dashboard.title")}
         </h2>
 
         <p className="text-sm text-muted-foreground">
-          Here's what's happening with your money.
+          {t("dashboard.overview")}
         </p>
       </div>
 
@@ -94,7 +98,7 @@ function Dashboard() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium">
-              Balance
+              {t("dashboard.balance")}
             </CardTitle>
 
             <Wallet className="h-4 w-4 text-muted-foreground" />
@@ -106,7 +110,7 @@ function Dashboard() {
             </div>
 
             <p className="mt-1 text-xs text-muted-foreground">
-              Current balance
+              {t("dashboard.currentBalance")}
             </p>
           </CardContent>
         </Card>
@@ -115,7 +119,7 @@ function Dashboard() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium">
-              Income
+              {t("dashboard.income")}
             </CardTitle>
 
             <ArrowUpRight className="h-4 w-4 text-muted-foreground" />
@@ -127,28 +131,28 @@ function Dashboard() {
             </div>
 
             <p className="mt-1 text-xs text-muted-foreground">
-  This month
-</p>
+              {t("dashboard.thisMonth")}
+            </p>
 
-<div className="mt-2 flex items-center gap-1 text-xs">
-  {dashboard.expenseChangePercentage > 0 ? (
-    <span className="font-medium text-red-600">
-      +{dashboard.expenseChangePercentage.toFixed(1)}%
-    </span>
-  ) : dashboard.expenseChangePercentage < 0 ? (
-    <span className="font-medium text-green-600">
-      {dashboard.expenseChangePercentage.toFixed(1)}%
-    </span>
-  ) : (
-    <span className="font-medium text-muted-foreground">
-      0%
-    </span>
-  )}
+            <div className="mt-2 flex items-center gap-1 text-xs">
+              {dashboard.expenseChangePercentage > 0 ? (
+                <span className="font-medium text-red-600">
+                  +{dashboard.expenseChangePercentage.toFixed(1)}%
+                </span>
+              ) : dashboard.expenseChangePercentage < 0 ? (
+                <span className="font-medium text-green-600">
+                  {dashboard.expenseChangePercentage.toFixed(1)}%
+                </span>
+              ) : (
+                <span className="font-medium text-muted-foreground">
+                  0%
+                </span>
+              )}
 
-  <span className="text-muted-foreground">
-    vs previous month
-  </span>
-</div>
+              <span className="text-muted-foreground">
+                {t("dashboard.vsPreviousMonth")}
+              </span>
+            </div>
           </CardContent>
         </Card>
 
@@ -156,7 +160,7 @@ function Dashboard() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium">
-              Expenses
+              {t("dashboard.expenses")}
             </CardTitle>
 
             <ArrowDownRight className="h-4 w-4 text-muted-foreground" />
@@ -168,7 +172,7 @@ function Dashboard() {
             </div>
 
             <p className="mt-1 text-xs text-muted-foreground">
-              This month
+              {t("dashboard.thisMonth")}
             </p>
           </CardContent>
         </Card>
@@ -177,7 +181,7 @@ function Dashboard() {
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium">
-              Subscriptions
+              {t("dashboard.subscriptions")}
             </CardTitle>
           </CardHeader>
 
@@ -187,7 +191,7 @@ function Dashboard() {
             </div>
 
             <p className="mt-1 text-xs text-muted-foreground">
-              Monthly cost
+              {t("dashboard.monthlyCost")}
             </p>
           </CardContent>
         </Card>
@@ -201,16 +205,15 @@ function Dashboard() {
         <Card>
           <CardHeader>
             <CardTitle>
-              Spending by category
+              {t("dashboard.spendingByCategory")}
             </CardTitle>
           </CardHeader>
 
           <CardContent>
-
             {categoryData.length === 0 ? (
               <div className="flex h-[280px] items-center justify-center">
                 <p className="text-sm text-muted-foreground">
-                  No expenses this month.
+                  {t("dashboard.noExpensesThisMonth")}
                 </p>
               </div>
             ) : (
@@ -220,7 +223,6 @@ function Dashboard() {
                   height="100%"
                 >
                   <PieChart>
-
                     <Pie
                       data={categoryData}
                       dataKey="value"
@@ -232,24 +234,20 @@ function Dashboard() {
                       paddingAngle={3}
                     >
                       {categoryData.map((entry, index) => (
-                        <Cell
-                          key={`cell-${index}`}
-                        />
+                        <Cell key={`cell-${index}`} />
                       ))}
                     </Pie>
 
                     <Tooltip
                       formatter={(value) => [
                         `${Number(value).toFixed(2)} MAD`,
-                        "Spent",
+                        t("dashboard.spent"),
                       ]}
                     />
-
                   </PieChart>
                 </ResponsiveContainer>
               </div>
             )}
-
           </CardContent>
         </Card>
 
@@ -257,26 +255,23 @@ function Dashboard() {
         <Card>
           <CardHeader>
             <CardTitle>
-              Upcoming subscriptions
+              {t("dashboard.upcomingSubscriptions")}
             </CardTitle>
           </CardHeader>
 
           <CardContent>
-
             {dashboard.upcomingSubscriptions.length === 0 ? (
               <p className="text-sm text-muted-foreground">
-                No upcoming subscriptions.
+                {t("dashboard.noUpcomingSubscriptions")}
               </p>
             ) : (
               <div className="space-y-4">
-
                 {dashboard.upcomingSubscriptions.map(
                   (subscription) => (
                     <div
                       key={subscription.id}
                       className="flex items-center justify-between"
                     >
-
                       <div>
                         <p className="text-sm font-medium">
                           {subscription.name}
@@ -290,74 +285,83 @@ function Dashboard() {
                       <span className="text-sm font-semibold">
                         {subscription.amount.toFixed(2)} MAD
                       </span>
-
                     </div>
                   )
                 )}
-
               </div>
             )}
-
           </CardContent>
         </Card>
 
       </div>
-{/* Budget Overview */}
-<Card>
-  <CardHeader>
-    <CardTitle>Budget Overview</CardTitle>
-  </CardHeader>
 
-  <CardContent>
-    {dashboard.budgets.length === 0 ? (
-      <p className="text-sm text-muted-foreground">
-        No budgets available.
-      </p>
-    ) : (
-      <div className="space-y-6">
-        {dashboard.budgets.map((budget) => (
-          <div key={budget.category} className="space-y-2">
+      {/* Budget Overview */}
+      <Card>
+        <CardHeader>
+          <CardTitle>
+            {t("dashboard.budgetOverview")}
+          </CardTitle>
+        </CardHeader>
 
-            {/* Category + Status */}
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium">
-                  {budget.category}
-                </p>
+        <CardContent>
+          {dashboard.budgets.length === 0 ? (
+            <p className="text-sm text-muted-foreground">
+              {t("dashboard.noBudgets")}
+            </p>
+          ) : (
+            <div className="space-y-6">
+              {dashboard.budgets.map((budget) => (
+                <div
+                  key={budget.category}
+                  className="space-y-2"
+                >
 
-                <p className="text-xs text-muted-foreground">
-                  {budget.spent.toFixed(2)} MAD spent of{" "}
-                  {budget.budget.toFixed(2)} MAD
-                </p>
-              </div>
+                  {/* Category + Status */}
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium">
+                        {budget.category}
+                      </p>
 
-              <span className="text-sm font-medium">
-                {budget.percentageUsed.toFixed(0)}%
-              </span>
+                      <p className="text-xs text-muted-foreground">
+                        {budget.spent.toFixed(2)} MAD{" "}
+                        {t("dashboard.spentOf")}{" "}
+                        {budget.budget.toFixed(2)} MAD
+                      </p>
+                    </div>
+
+                    <span className="text-sm font-medium">
+                      {budget.percentageUsed.toFixed(0)}%
+                    </span>
+                  </div>
+
+                  {/* Progress */}
+                  <Progress
+                    value={Math.min(
+                      budget.percentageUsed,
+                      100
+                    )}
+                  />
+
+                  {/* Remaining */}
+                  <div className="flex justify-between text-xs text-muted-foreground">
+                    <span>
+                      {t("dashboard.remaining")}:{" "}
+                      {budget.remaining.toFixed(2)} MAD
+                    </span>
+
+                    <span>
+                      {budget.status}
+                    </span>
+                  </div>
+
+                </div>
+              ))}
             </div>
+          )}
+        </CardContent>
+      </Card>
 
-            {/* Progress */}
-            <Progress
-              value={Math.min(budget.percentageUsed, 100)}
-            />
-
-            {/* Remaining */}
-            <div className="flex justify-between text-xs text-muted-foreground">
-              <span>
-                Remaining: {budget.remaining.toFixed(2)} MAD
-              </span>
-
-              <span>
-                {budget.status}
-              </span>
-            </div>
-
-          </div>
-        ))}
-      </div>
-    )}
-  </CardContent>
-</Card>
     </div>
   );
 }

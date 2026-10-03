@@ -4,6 +4,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
+import { useTranslation } from "react-i18next";
 
 import api from "@/services/api";
 
@@ -17,29 +18,46 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-const registerSchema = z.object({
-  name: z
-    .string()
-    .min(2, "Name must contain at least 2 characters"),
-
-  email: z
-    .string()
-    .email("Please enter a valid email address"),
-
-  password: z
-    .string()
-    .min(6, "Password must contain at least 6 characters"),
-});
+import LanguageSwitcher from "@/components/LanguageSwitcher";
 
 function Register() {
   const navigate = useNavigate();
+  const { t, i18n } = useTranslation();
+
+  const isArabic = i18n.language === "ar";
+
+  const registerSchema = z.object({
+    name: z
+      .string()
+      .min(
+        2,
+        t("auth.validation.name")
+      ),
+
+    email: z
+      .string()
+      .email(
+        t("auth.validation.email")
+      ),
+
+    password: z
+      .string()
+      .min(
+        6,
+        t("auth.validation.password")
+      ),
+  });
 
   const {
     register,
     handleSubmit,
-    formState: { errors, isSubmitting },
+    formState: {
+      errors,
+      isSubmitting,
+    },
   } = useForm({
     resolver: zodResolver(registerSchema),
+
     defaultValues: {
       name: "",
       email: "",
@@ -55,7 +73,9 @@ function Register() {
         password: data.password,
       });
 
-      toast.success("Account created successfully.");
+      toast.success(
+        t("auth.accountCreated")
+      );
 
       navigate("/login");
     } catch (error) {
@@ -64,144 +84,170 @@ function Register() {
       const message =
         error.response?.data?.message ||
         error.response?.data?.error ||
-        "Unable to create your account.";
+        t("auth.registerError");
 
       toast.error(message);
     }
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 flex">
-
-      {/* Left side - Branding */}
-      <div className="hidden lg:flex lg:w-1/2 flex-col justify-between p-12 text-white">
+    <div
+      dir="ltr"
+      className={`flex min-h-screen bg-slate-950 ${
+        isArabic ? "flex-row-reverse" : "flex-row"
+      }`}
+    >
+      {/* ================= BRANDING SIDE ================= */}
+      <div className="hidden flex-col justify-between p-12 text-white lg:flex lg:w-1/2">
+        {/* Logo */}
         <div>
           <div className="text-2xl font-bold tracking-tight">
             SpendWise
           </div>
 
-          <p className="mt-2 text-slate-400 max-w-md">
-            Start managing your finances with clarity and confidence.
+          <p className="mt-2 max-w-md text-slate-400">
+            {t("auth.registerBrandDescription")}
           </p>
         </div>
 
-        <div>
-          <p className="text-4xl font-semibold leading-tight max-w-lg">
-            Build better
+        {/* Main message */}
+        <div dir={isArabic ? "rtl" : "ltr"}>
+          <p className="max-w-lg text-4xl font-semibold leading-tight">
+            {t("auth.registerHeadlineLine1")}
             <br />
-            money habits.
+            {t("auth.registerHeadlineLine2")}
+            <br />
+            {t("auth.registerHeadlineLine3")}
           </p>
 
           <p className="mt-6 text-sm text-slate-500">
-            Simple tools for smarter financial decisions.
+            {t("auth.registerTagline")}
           </p>
         </div>
       </div>
 
-      {/* Right side - Register */}
-      <div className="flex-1 flex items-center justify-center bg-slate-50 p-6">
-        <Card className="w-full max-w-md shadow-xl border-0">
-          <CardHeader className="space-y-2">
-            <CardTitle className="text-2xl">
-              Create your account
-            </CardTitle>
+      {/* ================= FORM SIDE ================= */}
+      <div className="flex flex-1 flex-col bg-slate-50 p-6">
+        {/* Language */}
+        <div className="flex w-full justify-end">
+          <LanguageSwitcher />
+        </div>
 
-            <p className="text-sm text-muted-foreground">
-              Get started with SpendWise
-            </p>
-          </CardHeader>
+        {/* Form */}
+        <div
+          dir={isArabic ? "rtl" : "ltr"}
+          className="flex flex-1 items-center justify-center"
+        >
+          <Card className="w-full max-w-md border-0 shadow-xl">
+            <CardHeader className="space-y-2">
+              <CardTitle className="text-2xl">
+                {t("auth.createAccount")}
+              </CardTitle>
 
-          <CardContent>
-            <form
-              onSubmit={handleSubmit(onSubmit)}
-              className="space-y-5"
-            >
+              <p className="text-sm text-muted-foreground">
+                {t("auth.registerSubtitle")}
+              </p>
+            </CardHeader>
 
-              <div className="space-y-2">
-                <Label htmlFor="name">
-                  Full name
-                </Label>
-
-                <Input
-                  id="name"
-                  type="text"
-                  placeholder="Your name"
-                  {...register("name")}
-                  disabled={isSubmitting}
-                />
-
-                {errors.name && (
-                  <p className="text-sm text-red-500">
-                    {errors.name.message}
-                  </p>
-                )}
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="email">
-                  Email
-                </Label>
-
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="you@example.com"
-                  {...register("email")}
-                  disabled={isSubmitting}
-                />
-
-                {errors.email && (
-                  <p className="text-sm text-red-500">
-                    {errors.email.message}
-                  </p>
-                )}
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="password">
-                  Password
-                </Label>
-
-                <Input
-                  id="password"
-                  type="password"
-                  placeholder="••••••••"
-                  {...register("password")}
-                  disabled={isSubmitting}
-                />
-
-                {errors.password && (
-                  <p className="text-sm text-red-500">
-                    {errors.password.message}
-                  </p>
-                )}
-              </div>
-
-              <Button
-                className="w-full"
-                type="submit"
-                disabled={isSubmitting}
+            <CardContent>
+              <form
+                onSubmit={handleSubmit(onSubmit)}
+                className="space-y-5"
               >
-                {isSubmitting
-                  ? "Creating account..."
-                  : "Create account"}
-              </Button>
+                {/* Name */}
+                <div className="space-y-2">
+                  <Label htmlFor="name">
+                    {t("auth.name")}
+                  </Label>
 
-            </form>
+                  <Input
+                    id="name"
+                    type="text"
+                    placeholder={t(
+                      "auth.namePlaceholder"
+                    )}
+                    {...register("name")}
+                    disabled={isSubmitting}
+                  />
 
-            <p className="mt-6 text-center text-sm text-muted-foreground">
-              Already have an account?{" "}
-              <Link
-                to="/login"
-                className="font-medium text-primary hover:underline"
-              >
-                Sign in
-              </Link>
-            </p>
-          </CardContent>
-        </Card>
+                  {errors.name && (
+                    <p className="text-sm text-red-500">
+                      {errors.name.message}
+                    </p>
+                  )}
+                </div>
+
+                {/* Email */}
+                <div className="space-y-2">
+                  <Label htmlFor="email">
+                    {t("auth.email")}
+                  </Label>
+
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder={t(
+                      "auth.emailPlaceholder"
+                    )}
+                    {...register("email")}
+                    disabled={isSubmitting}
+                  />
+
+                  {errors.email && (
+                    <p className="text-sm text-red-500">
+                      {errors.email.message}
+                    </p>
+                  )}
+                </div>
+
+                {/* Password */}
+                <div className="space-y-2">
+                  <Label htmlFor="password">
+                    {t("auth.password")}
+                  </Label>
+
+                  <Input
+                    id="password"
+                    type="password"
+                    placeholder="••••••••"
+                    {...register("password")}
+                    disabled={isSubmitting}
+                  />
+
+                  {errors.password && (
+                    <p className="text-sm text-red-500">
+                      {errors.password.message}
+                    </p>
+                  )}
+                </div>
+
+                {/* Submit */}
+                <Button
+                  className="w-full"
+                  type="submit"
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting
+                    ? t("auth.creatingAccount")
+                    : t("auth.createAccount")}
+                </Button>
+              </form>
+
+              {/* Login */}
+              <p className="mt-6 text-center text-sm text-muted-foreground">
+                {t("auth.haveAccount")}{" "}
+
+                <Link
+                  to="/login"
+                  className="font-medium text-primary hover:underline"
+                >
+                  {t("auth.signIn")}
+                </Link>
+              </p>
+            </CardContent>
+          </Card>
+        </div>
       </div>
-
     </div>
   );
 }

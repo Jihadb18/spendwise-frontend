@@ -1,8 +1,12 @@
+
+
+
 import { useEffect, useState } from "react";
 import { Pencil, Plus, Trash2 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useTranslation } from "react-i18next";
 
 import {
   Card,
@@ -29,25 +33,27 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
-const incomeSchema = z.object({
-  source: z
-    .string()
-    .min(2, "Source must contain at least 2 characters."),
-
-  amount: z
-    .string()
-    .min(1, "Amount is required.")
-    .refine(
-      (value) => Number(value) > 0,
-      "Amount must be greater than 0."
-    ),
-
-  date: z
-    .string()
-    .min(1, "Date is required."),
-});
-
 function Income() {
+  const { t } = useTranslation();
+
+  const incomeSchema = z.object({
+    source: z
+      .string()
+      .min(2, t("incomePage.validation.source")),
+
+    amount: z
+      .string()
+      .min(1, t("incomePage.validation.amountRequired"))
+      .refine(
+        (value) => Number(value) > 0,
+        t("incomePage.validation.amountPositive")
+      ),
+
+    date: z
+      .string()
+      .min(1, t("incomePage.validation.date")),
+  });
+
   const [incomes, setIncomes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -84,8 +90,8 @@ function Income() {
     } catch (error) {
       console.error("Income error:", error);
 
-      setError("Unable to load your income.");
-      toast.error("Unable to load your income.");
+      setError(t("incomePage.errors.load"));
+      toast.error(t("incomePage.errors.load"));
     } finally {
       setLoading(false);
     }
@@ -155,7 +161,7 @@ function Income() {
           )
         );
 
-        toast.success("Income updated successfully.");
+        toast.success(t("incomePage.toast.updated"));
       } else {
         const response = await api.post(
           "/incomes",
@@ -167,7 +173,7 @@ function Income() {
           ...currentIncomes,
         ]);
 
-        toast.success("Income added successfully.");
+        toast.success(t("incomePage.toast.added"));
       }
 
       closeForm();
@@ -176,7 +182,7 @@ function Income() {
 
       const message =
         error.response?.data?.message ||
-        "Unable to save this income.";
+        t("incomePage.errors.save");
 
       setError(message);
       toast.error(message);
@@ -212,7 +218,7 @@ function Income() {
         )
       );
 
-      toast.success("Income deleted successfully.");
+      toast.success(t("incomePage.toast.deleted"));
 
       setDeleteIncomeId(null);
     } catch (error) {
@@ -220,7 +226,7 @@ function Income() {
 
       const message =
         error.response?.data?.message ||
-        "Unable to delete this income.";
+        t("incomePage.errors.delete");
 
       setError(message);
       toast.error(message);
@@ -233,7 +239,7 @@ function Income() {
     return (
       <div className="flex min-h-[400px] items-center justify-center">
         <p className="text-sm text-muted-foreground">
-          Loading income...
+          {t("incomePage.loading")}
         </p>
       </div>
     );
@@ -245,17 +251,17 @@ function Income() {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold tracking-tight">
-            Income
+            {t("incomePage.title")}
           </h2>
 
           <p className="text-sm text-muted-foreground">
-            Manage and track your income.
+            {t("incomePage.subtitle")}
           </p>
         </div>
 
         <Button onClick={openAddForm}>
           <Plus className="mr-2 h-4 w-4" />
-          Add income
+          {t("incomePage.addIncome")}
         </Button>
       </div>
 
@@ -274,8 +280,8 @@ function Income() {
           <CardHeader>
             <CardTitle>
               {editingIncome
-                ? "Edit income"
-                : "Add new income"}
+                ? t("incomePage.editIncome")
+                : t("incomePage.addNewIncome")}
             </CardTitle>
           </CardHeader>
 
@@ -287,12 +293,14 @@ function Income() {
               {/* Source */}
               <div className="space-y-2">
                 <Label htmlFor="source">
-                  Source
+                  {t("incomePage.source")}
                 </Label>
 
                 <Input
                   id="source"
-                  placeholder="e.g. Salary"
+                  placeholder={t(
+                    "incomePage.sourcePlaceholder"
+                  )}
                   {...register("source")}
                 />
 
@@ -306,7 +314,7 @@ function Income() {
               {/* Amount */}
               <div className="space-y-2">
                 <Label htmlFor="amount">
-                  Amount
+                  {t("incomePage.amount")}
                 </Label>
 
                 <Input
@@ -327,7 +335,7 @@ function Income() {
               {/* Date */}
               <div className="space-y-2">
                 <Label htmlFor="date">
-                  Date
+                  {t("incomePage.date")}
                 </Label>
 
                 <Input
@@ -350,7 +358,7 @@ function Income() {
                   variant="outline"
                   onClick={closeForm}
                 >
-                  Cancel
+                  {t("common.cancel")}
                 </Button>
 
                 <Button
@@ -358,10 +366,10 @@ function Income() {
                   disabled={submitting}
                 >
                   {submitting
-                    ? "Saving..."
+                    ? t("incomePage.saving")
                     : editingIncome
-                      ? "Save changes"
-                      : "Add income"}
+                      ? t("incomePage.saveChanges")
+                      : t("incomePage.addIncome")}
                 </Button>
               </div>
             </form>
@@ -373,7 +381,7 @@ function Income() {
       <Card>
         <CardHeader>
           <CardTitle>
-            All income
+            {t("incomePage.allIncome")}
           </CardTitle>
         </CardHeader>
 
@@ -382,11 +390,11 @@ function Income() {
             <div className="flex min-h-[250px] items-center justify-center">
               <div className="text-center">
                 <p className="font-medium">
-                  No income yet
+                  {t("incomePage.noIncome")}
                 </p>
 
                 <p className="mt-1 text-sm text-muted-foreground">
-                  Start by adding your first income.
+                  {t("incomePage.firstIncome")}
                 </p>
               </div>
             </div>
@@ -396,19 +404,19 @@ function Income() {
                 <thead>
                   <tr className="border-b text-left">
                     <th className="px-4 py-3 font-medium">
-                      Source
+                      {t("incomePage.source")}
                     </th>
 
                     <th className="px-4 py-3 font-medium">
-                      Date
+                      {t("incomePage.date")}
                     </th>
 
                     <th className="px-4 py-3 text-right font-medium">
-                      Amount
+                      {t("incomePage.amount")}
                     </th>
 
                     <th className="px-4 py-3 text-right font-medium">
-                      Action
+                      {t("common.actions")}
                     </th>
                   </tr>
                 </thead>
@@ -475,12 +483,11 @@ function Income() {
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>
-              Delete income?
+              {t("incomePage.deleteIncome")}
             </AlertDialogTitle>
 
             <AlertDialogDescription>
-              This action cannot be undone. This income will
-              be permanently deleted from your account.
+              {t("incomePage.deleteDescription")}
             </AlertDialogDescription>
           </AlertDialogHeader>
 
@@ -489,7 +496,7 @@ function Income() {
               disabled={deleting}
               onClick={closeDeleteDialog}
             >
-              Cancel
+              {t("common.cancel")}
             </AlertDialogCancel>
 
             <AlertDialogAction
@@ -500,7 +507,9 @@ function Income() {
               disabled={deleting}
               className="bg-destructive text-white hover:bg-destructive/90"
             >
-              {deleting ? "Deleting..." : "Delete"}
+              {deleting
+                ? t("incomePage.deleting")
+                : t("common.delete")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
