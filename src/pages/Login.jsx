@@ -16,6 +16,53 @@ import { Label } from "@/components/ui/label";
 import { useAuth } from "@/context/AuthContext";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 
+function EyeIcon({ className = "size-4" }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      className={className}
+    >
+      <path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z" />
+      <circle cx="12" cy="12" r="2.5" />
+    </svg>
+  );
+}
+
+function EyeOffIcon({ className = "size-4" }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      className={className}
+    >
+      <path d="m3 3 18 18" />
+      <path d="M10.6 10.6a2 2 0 0 0 2.8 2.8" />
+      <path d="M9.9 5.2A10.8 10.8 0 0 1 12 5c6 0 9.5 7 9.5 7a16.7 16.7 0 0 1-3.1 3.9" />
+      <path d="M6.6 6.6C3.8 8.5 2.5 12 2.5 12s3.5 6 9.5 6c1.1 0 2.1-.2 3-.5" />
+    </svg>
+  );
+}
+
+function ArrowRightIcon({ className = "size-4" }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      className={className}
+    >
+      <path d="M5 12h14" />
+      <path d="m13 6 6 6-6 6" />
+    </svg>
+  );
+}
+
 function Login() {
   const { login } = useAuth();
   const navigate = useNavigate();
@@ -26,8 +73,9 @@ function Login() {
 
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
-  const isArabic = i18n.language === "ar";
+  const isArabic = i18n.language.startsWith("ar");
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -60,142 +108,298 @@ function Login() {
   };
 
   return (
-    <div
-      dir="ltr"
-      className={`flex min-h-screen bg-slate-950 ${
-        isArabic ? "flex-row-reverse" : "flex-row"
-      }`}
-    >
-      {/* ================= BRANDING SIDE ================= */}
-      <div className="hidden flex-col justify-between p-12 text-white lg:flex lg:w-1/2">
-        {/* Logo */}
-        <div>
-          <div className="text-2xl font-bold tracking-tight">
-            SpendWise
+    <div className="dark min-h-screen bg-background text-foreground">
+      <div
+        dir="ltr"
+        className={`flex min-h-screen ${
+          isArabic ? "flex-row-reverse" : "flex-row"
+        }`}
+      >
+        {/* =====================================================
+            BRANDING
+        ===================================================== */}
+
+        <section className="relative hidden overflow-hidden bg-background lg:flex lg:w-[52%] lg:flex-col lg:justify-between lg:border-border lg:p-10 xl:p-14">
+         {/* Background decoration */}
+<div
+  className="
+    pointer-events-none
+    absolute -left-32 top-1/4
+    size-96
+    rounded-full
+    bg-white/40
+    blur-3xl
+  "
+/>
+
+<div
+  className="
+    pointer-events-none
+    absolute -bottom-55 right-9
+    size-96
+    rounded-full
+    bg-white/30
+    blur-3xl
+  "
+/>
+
+<div
+  className="
+    pointer-events-none
+    absolute -right-12 top-1/36
+    size-56
+    rounded-full
+    bg-white/50
+    blur-3xl
+  "
+/>
+
+          {/* Logo */}
+          <div className="relative z-10">
+            <Link
+              to="/"
+              className="inline-flex items-center gap-3"
+            >
+              
+
+              <span className="text-xl font-semibold tracking-tight">
+                SpendWise
+              </span>
+            </Link>
+
+            <p className="mt-4 max-w-sm text-sm leading-6 text-muted-foreground">
+              {t("auth.loginBrandDescription")}
+            </p>
           </div>
 
-          <p className="mt-2 max-w-md text-slate-400">
-            {t("auth.loginBrandDescription")}
-          </p>
-        </div>
+          {/* Main content */}
+          <div
+            dir={isArabic ? "rtl" : "ltr"}
+            className="relative z-10"
+          >
+            <p className="max-w-xl text-4xl font-semibold leading-[1.08] tracking-tight xl:text-5xl">
+              {t("auth.loginHeadlineLine1")}
+              <br />
+              {t("auth.loginHeadlineLine2")}
+              <br />
+              {t("auth.loginHeadlineLine3")}
+            </p>
 
-        {/* Main message */}
-        <div dir={isArabic ? "rtl" : "ltr"}>
-          <p className="max-w-lg text-5xl font-semibold leading-tight">
-            {t("auth.loginHeadlineLine1")}
-            <br />
-            {t("auth.loginHeadlineLine2")}
-            <br />
-            {t("auth.loginHeadlineLine3")}
-          </p>
+            <p className="mt-5 max-w-md text-sm leading-6 text-muted-foreground">
+              {t("auth.loginTagline")}
+            </p>
 
-          <p className="mt-6 text-sm text-slate-500">
-            {t("auth.loginTagline")}
-          </p>
-        </div>
-      </div>
+         
+          </div>
 
-      {/* ================= FORM SIDE ================= */}
-      <div className="flex flex-1 flex-col bg-slate-50 p-6">
-        {/* Language */}
-        <div className="flex w-full justify-end">
-          <LanguageSwitcher />
-        </div>
+          
+        </section>
 
-        {/* Form */}
-        <div
-          dir={isArabic ? "rtl" : "ltr"}
-          className="flex flex-1 items-center justify-center"
-        >
-          <Card className="w-full max-w-md border-0 shadow-xl">
-            <CardHeader className="space-y-2">
-              <CardTitle className="text-2xl font-semibold">
-                {t("auth.welcomeBack")}
-              </CardTitle>
+        {/* =====================================================
+            FORM SIDE
+        ===================================================== */}
 
-              <p className="text-sm text-muted-foreground">
-                {t("auth.loginSubtitle")}
-              </p>
-            </CardHeader>
+        <section className="flex min-h-screen flex-1 flex-col bg-background">
+          {/* Top bar */}
+          <div className="flex items-center justify-between px-5 py-5 sm:px-8">
+            {/* Mobile logo */}
+            <Link
+              to="/"
+              className="flex items-center gap-2.5 lg:hidden"
+            >
+              
 
-            <CardContent>
-              <form
-                onSubmit={handleSubmit}
-                className="space-y-5"
-              >
-                {/* Email */}
-                <div className="space-y-2">
-                  <Label htmlFor="email">
-                    {t("auth.email")}
-                  </Label>
+              <span className="font-semibold">
+                SpendWise
+              </span>
+            </Link>
 
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder={t(
-                      "auth.emailPlaceholder"
+            <div className="ml-auto">
+              <LanguageSwitcher />
+            </div>
+          </div>
+
+          {/* Form */}
+          <div
+            dir={isArabic ? "rtl" : "ltr"}
+            className="flex flex-1 items-center justify-center px-5 pb-10 sm:px-8"
+          >
+            <div className="w-full max-w-[420px]">
+              {/* Heading */}
+              <div className="mb-8">
+               
+
+                <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
+                  {t("auth.welcomeBack")}
+                </h1>
+
+                <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                  {t("auth.loginSubtitle")}
+                </p>
+              </div>
+
+              {/* Card */}
+              <Card className="border-border bg-card shadow-xl shadow-black/5">
+                <CardHeader className="sr-only">
+                  <CardTitle>
+                    {t("auth.welcomeBack")}
+                  </CardTitle>
+                </CardHeader>
+
+                <CardContent className="p-6 sm:p-7">
+                  <form
+                    onSubmit={handleSubmit}
+                    className="space-y-5"
+                  >
+                    {/* Email */}
+                    <div className="space-y-2">
+                      <Label htmlFor="email">
+                        {t("auth.email")}
+                      </Label>
+
+                      <Input
+                        id="email"
+                        type="email"
+                        autoComplete="email"
+                        placeholder={t(
+                          "auth.emailPlaceholder"
+                        )}
+                        value={email}
+                        onChange={(event) =>
+                          setEmail(event.target.value)
+                        }
+                        disabled={loading}
+                        className="h-10 bg-background"
+                      />
+                    </div>
+
+                    {/* Password */}
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <Label htmlFor="password">
+                          {t("auth.password")}
+                        </Label>
+                      </div>
+
+                      <div className="relative">
+                        <Input
+                          id="password"
+                          type={
+                            showPassword
+                              ? "text"
+                              : "password"
+                          }
+                          autoComplete="current-password"
+                          placeholder="••••••••"
+                          value={password}
+                          onChange={(event) =>
+                            setPassword(event.target.value)
+                          }
+                          disabled={loading}
+                          className="h-10 bg-background pe-10"
+                        />
+
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setShowPassword(
+                              (value) => !value
+                            )
+                          }
+                          disabled={loading}
+                          className="
+                            absolute
+                            end-0 top-0
+                            flex h-10 w-10
+                            items-center justify-center
+                            text-muted-foreground
+                            transition-colors
+                            hover:text-foreground
+                          "
+                          aria-label={
+                            showPassword
+                              ? "Hide password"
+                              : "Show password"
+                          }
+                        >
+                          {showPassword ? (
+                            <EyeOffIcon />
+                          ) : (
+                            <EyeIcon />
+                          )}
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Error */}
+                    {error && (
+                      <div
+                        className="
+                          rounded-lg
+                          border border-destructive/20
+                          bg-destructive/10
+                          px-3.5 py-3
+                        "
+                      >
+                        <p className="text-sm text-destructive">
+                          {error}
+                        </p>
+                      </div>
                     )}
-                    value={email}
-                    onChange={(event) =>
-                      setEmail(event.target.value)
-                    }
-                    disabled={loading}
-                  />
-                </div>
 
-                {/* Password */}
-                <div className="space-y-2">
-                  <Label htmlFor="password">
-                    {t("auth.password")}
-                  </Label>
+                    {/* Submit */}
+                    <Button
+                      className="h-10 w-full"
+                      type="submit"
+                      disabled={loading}
+                    >
+                      {loading ? (
+                        <span className="flex items-center gap-2">
+                          <span className="size-3.5 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                          {t("auth.signingIn")}
+                        </span>
+                      ) : (
+                        <>
+                          {t("auth.login")}
+                          <ArrowRightIcon
+                            className={
+                              isArabic
+                                ? "size-4 rotate-180"
+                                : "size-4"
+                            }
+                          />
+                        </>
+                      )}
+                    </Button>
+                  </form>
 
-                  <Input
-                    id="password"
-                    type="password"
-                    placeholder="••••••••"
-                    value={password}
-                    onChange={(event) =>
-                      setPassword(event.target.value)
-                    }
-                    disabled={loading}
-                  />
-                </div>
-
-                {/* Error */}
-                {error && (
-                  <div className="rounded-md bg-destructive/10 px-3 py-2">
-                    <p className="text-sm text-destructive">
-                      {error}
+                  {/* Register */}
+                  <div className="mt-6 border-t border-border pt-6 text-center">
+                    <p className="text-sm text-muted-foreground">
+                      {t("auth.noAccount")}{" "}
+                      <Link
+                        to="/register"
+                        className="
+                          font-medium
+                          text-foreground
+                          underline-offset-4
+                          hover:underline
+                        "
+                      >
+                        {t("auth.createOne")}
+                      </Link>
                     </p>
                   </div>
-                )}
+                </CardContent>
+              </Card>
 
-                {/* Submit */}
-                <Button
-                  className="w-full"
-                  type="submit"
-                  disabled={loading}
-                >
-                  {loading
-                    ? t("auth.signingIn")
-                    : t("auth.login")}
-                </Button>
-              </form>
-
-              {/* Register */}
-              <p className="mt-6 text-center text-sm text-muted-foreground">
-                {t("auth.noAccount")}{" "}
-
-                <Link
-                  to="/register"
-                  className="font-medium text-primary hover:underline"
-                >
-                  {t("auth.createOne")}
-                </Link>
+              {/* Footer */}
+              <p className="mt-6 text-center text-xs text-muted-foreground">
+                SpendWise · Smart financial management
               </p>
-            </CardContent>
-          </Card>
-        </div>
+            </div>
+          </div>
+        </section>
       </div>
     </div>
   );
