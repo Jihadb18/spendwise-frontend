@@ -35,7 +35,20 @@ const ar = {
       arabic: "العربية",
     },
 
-   
+   categories: {
+  food: "الطعام",
+  transport: "النقل",
+  shopping: "التسوق",
+  housing: "السكن",
+  bills: "الفواتير",
+  entertainment: "الترفيه",
+  health: "الصحة",
+  education: "التعليم",
+  travel: "السفر",
+  other: "أخرى",
+},
+
+
 auth: {
   login: "تسجيل الدخول",
   register: "إنشاء حساب",
@@ -243,7 +256,7 @@ auth: {
 
       date:
         "التاريخ",
-
+      datePlaceholder: "اختر تاريخًا", 
       loading:
         "جارٍ تحميل المصاريف...",
 
@@ -297,6 +310,19 @@ auth: {
         delete:
           "تعذر حذف هذا المصروف.",
       },
+      expensesFound: "مصاريف",
+      searchPlaceholder: "ابحث عن المصاريف...",
+      filterCategory: "تصفية حسب الفئة",
+      allCategories: "جميع الفئات",
+      sortBy: "ترتيب حسب",
+      newest: "الأحدث",
+      oldest: "الأقدم",
+      amountHigh: "المبلغ: من الأعلى إلى الأقل",
+      amountLow: "المبلغ: من الأقل إلى الأعلى",
+      nameAZ: "الاسم: من أ إلى ي",
+      nameZA: "الاسم: من ي إلى أ",
+      noResults: "لم يتم العثور على مصاريف",
+      tryDifferentSearch: "جرّب بحثًا أو فلترًا مختلفًا.",
     },
 
     incomePage: {

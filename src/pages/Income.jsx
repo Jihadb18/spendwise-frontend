@@ -2,7 +2,7 @@
 
 
 import { useEffect, useState } from "react";
-import { Pencil, Plus, Trash2 } from "lucide-react";
+import { Pencil, Plus, Trash2, Search, X } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -32,7 +32,13 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 function Income() {
   const { t } = useTranslation();
 
@@ -234,6 +240,34 @@ function Income() {
       setDeleting(false);
     }
   };
+  const [searchTerm, setSearchTerm] = useState("");
+  const [sortBy, setSortBy] = useState("newest");
+
+const filteredIncomes = incomes
+  .filter((income) =>
+    String(income.source ?? "")
+      .toLowerCase()
+      .includes(searchTerm.trim().toLowerCase())
+  )
+  .sort((a, b) => {
+    switch (sortBy) {
+      case "oldest":
+        return new Date(a.date) - new Date(b.date);
+
+      case "amount-high":
+        return Number(b.amount) - Number(a.amount);
+
+      case "amount-low":
+        return Number(a.amount) - Number(b.amount);
+
+      case "newest":
+      default:
+        return new Date(b.date) - new Date(a.date);
+    }
+  });
+
+const hasActiveFilters =
+  searchTerm.trim() !== "" || sortBy !== "newest";
 
   if (loading) {
     return (
@@ -378,98 +412,202 @@ function Income() {
       )}
 
       {/* Income table */}
-      <Card>
-        <CardHeader>
-          <CardTitle>
-            {t("incomePage.allIncome")}
-          </CardTitle>
-        </CardHeader>
+      
+<Card className="overflow-hidden">
+  <CardHeader className="border-b py-4">
+    <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
+      {/* Title + count */}
+      <div className="flex shrink-0 items-center gap-2">
+        <CardTitle className="whitespace-nowrap text-base">
+          {t("incomePage.allIncome")}
+        </CardTitle>
 
-        <CardContent>
-          {incomes.length === 0 ? (
-            <div className="flex min-h-[250px] items-center justify-center">
-              <div className="text-center">
-                <p className="font-medium">
-                  {t("incomePage.noIncome")}
-                </p>
+        <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
+          {filteredIncomes.length}{" "}
+          {t("incomePage.incomeCount", {
+            defaultValue: "income records",
+          })}
+        </span>
+      </div>
 
-                <p className="mt-1 text-sm text-muted-foreground">
-                  {t("incomePage.firstIncome")}
-                </p>
-              </div>
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b text-left">
-                    <th className="px-4 py-3 font-medium">
-                      {t("incomePage.source")}
-                    </th>
+      {/* Search + Sort */}
+      <div className="flex w-full flex-col gap-2 sm:flex-row xl:w-auto xl:items-center">
+        {/* Search */}
+        <div className="relative min-w-0 flex-1 xl:w-[200px]">
+          <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground rtl:left-auto rtl:right-2.5" />
 
-                    <th className="px-4 py-3 font-medium">
-                      {t("incomePage.date")}
-                    </th>
+          <Input
+            value={searchTerm}
+            onChange={(event) => setSearchTerm(event.target.value)}
+            placeholder={t("incomePage.searchPlaceholder", {
+              defaultValue: "Search income...",
+            })}
+            aria-label={t("incomePage.searchPlaceholder", {
+              defaultValue: "Search income...",
+            })}
+            className="h-8 w-full pl-8 text-xs rtl:pl-2 rtl:pr-8"
+          />
+        </div>
 
-                    <th className="px-4 py-3 text-right font-medium">
-                      {t("incomePage.amount")}
-                    </th>
+        {/* Sort */}
+        <Select value={sortBy} onValueChange={setSortBy}>
+          <SelectTrigger className="h-8 w-full text-xs sm:w-[165px]">
+            <SelectValue
+              placeholder={t("incomePage.sortBy", {
+                defaultValue: "Sort by",
+              })}
+            />
+          </SelectTrigger>
 
-                    <th className="px-4 py-3 text-right font-medium">
-                      {t("common.actions")}
-                    </th>
-                  </tr>
-                </thead>
+          <SelectContent>
+            <SelectItem value="newest">
+              {t("incomePage.newest", {
+                defaultValue: "Newest first",
+              })}
+            </SelectItem>
 
-                <tbody>
-                  {incomes.map((income) => (
-                    <tr
-                      key={income.id}
-                      className="border-b last:border-0"
+            <SelectItem value="oldest">
+              {t("incomePage.oldest", {
+                defaultValue: "Oldest first",
+              })}
+            </SelectItem>
+
+            <SelectItem value="amount-high">
+              {t("incomePage.amountHigh", {
+                defaultValue: "Highest amount",
+              })}
+            </SelectItem>
+
+            <SelectItem value="amount-low">
+              {t("incomePage.amountLow", {
+                defaultValue: "Lowest amount",
+              })}
+            </SelectItem>
+          </SelectContent>
+        </Select>
+
+        {/* Reset */}
+        {hasActiveFilters && (
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 shrink-0 self-end sm:self-auto"
+            title={t("incomePage.resetFilters", {
+              defaultValue: "Reset filters",
+            })}
+            aria-label={t("incomePage.resetFilters", {
+              defaultValue: "Reset filters",
+            })}
+            onClick={() => {
+              setSearchTerm("");
+              setSortBy("newest");
+            }}
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        )}
+      </div>
+    </div>
+  </CardHeader>
+
+  <CardContent className="p-0">
+    {filteredIncomes.length === 0 ? (
+      <div className="flex min-h-[220px] flex-col items-center justify-center px-4 py-10 text-center">
+        <Search className="mb-3 h-7 w-7 text-muted-foreground/50" />
+
+        <p className="font-medium">
+          {incomes.length === 0
+            ? t("incomePage.noIncome")
+            : t("incomePage.noSearchResults", {
+                defaultValue: "No income matches your search.",
+              })}
+        </p>
+
+        <p className="mt-1 text-sm text-muted-foreground">
+          {incomes.length === 0
+            ? t("incomePage.firstIncome")
+            : t("incomePage.tryDifferentSearch", {
+                defaultValue: "Try another search term.",
+              })}
+        </p>
+      </div>
+    ) : (
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="bg-muted/30 text-left hover:bg-muted/30">
+              <th className="px-4 py-3 font-medium">
+                {t("incomePage.source")}
+              </th>
+
+              <th className="px-4 py-3 font-medium">
+                {t("incomePage.date")}
+              </th>
+
+              <th className="px-4 py-3 text-right font-medium">
+                {t("incomePage.amount")}
+              </th>
+
+              <th className="px-4 py-3 text-right font-medium">
+                {t("common.actions")}
+              </th>
+            </tr>
+          </thead>
+
+          <tbody>
+            {filteredIncomes.map((income) => (
+              <tr
+                key={income.id}
+                className="border-b transition-colors hover:bg-muted/40 last:border-0"
+              >
+                <td className="px-4 py-4 font-medium">
+                  {income.source}
+                </td>
+
+                <td className="whitespace-nowrap px-4 py-4 text-muted-foreground">
+                  {income.date}
+                </td>
+
+                <td className="whitespace-nowrap px-4 py-4 text-right font-semibold tabular-nums text-green-600">
+                  +{Number(income.amount).toFixed(2)} MAD
+                </td>
+
+                <td className="px-4 py-4 text-right">
+                  <div className="flex justify-end gap-1">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8"
+                      onClick={() => openEditForm(income)}
+                      title={t("common.edit")}
+                      aria-label={t("common.edit")}
                     >
-                      <td className="px-4 py-4 font-medium">
-                        {income.source}
-                      </td>
+                      <Pencil className="h-4 w-4" />
+                    </Button>
 
-                      <td className="px-4 py-4 text-muted-foreground">
-                        {income.date}
-                      </td>
-
-                      <td className="px-4 py-4 text-right font-semibold text-green-600">
-                        +{Number(income.amount).toFixed(2)} MAD
-                      </td>
-
-                      <td className="px-4 py-4 text-right">
-                        <div className="flex justify-end gap-1">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() =>
-                              openEditForm(income)
-                            }
-                          >
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() =>
-                              openDeleteDialog(income.id)
-                            }
-                          >
-                            <Trash2 className="h-4 w-4 text-destructive" />
-                          </Button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8"
+                      onClick={() => openDeleteDialog(income.id)}
+                      title={t("common.delete")}
+                      aria-label={t("common.delete")}
+                    >
+                      <Trash2 className="h-4 w-4 text-destructive" />
+                    </Button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    )}
+  </CardContent>
+</Card>
 
       {/* Delete Confirmation */}
       <AlertDialog

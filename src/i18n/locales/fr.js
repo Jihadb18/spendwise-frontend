@@ -34,7 +34,18 @@ const fr = {
       french: "Français",
       arabic: "العربية",
     },
-
+categories: {
+  food: "Alimentation",
+  transport: "Transport",
+  shopping: "Achats",
+  housing: "Logement",
+  bills: "Factures",
+  entertainment: "Divertissement",
+  health: "Santé",
+  education: "Éducation",
+  travel: "Voyage",
+  other: "Autre",
+},
     
 auth: {
   login: "Se connecter",
@@ -243,7 +254,7 @@ auth: {
 
       date:
         "Date",
-
+       datePlaceholder: "Sélectionner une date",
       loading:
         "Chargement des dépenses...",
 
@@ -297,6 +308,19 @@ auth: {
         delete:
           "Impossible de supprimer cette dépense.",
       },
+      expensesFound: "dépenses",
+      searchPlaceholder: "Rechercher des dépenses...",
+      filterCategory: "Filtrer par catégorie",
+      allCategories: "Toutes les catégories",
+      sortBy: "Trier par",
+      newest: "Plus récentes",
+      oldest: "Plus anciennes",
+      amountHigh: "Montant : décroissant",
+      amountLow: "Montant : croissant",
+      nameAZ: "Nom : A à Z",
+      nameZA: "Nom : Z à A",
+      noResults: "Aucune dépense trouvée",
+      tryDifferentSearch: "Essayez une autre recherche ou un autre filtre.",
     },
 
     incomePage: {

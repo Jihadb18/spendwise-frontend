@@ -34,7 +34,18 @@ const en = {
       french: "Français",
       arabic: "العربية",
     },
-
+categories: {
+  food: "Food",
+  transport: "Transport",
+  shopping: "Shopping",
+  housing: "Housing",
+  bills: "Bills",
+  entertainment: "Entertainment",
+  health: "Health",
+  education: "Education",
+  travel: "Travel",
+  other: "Other",
+},
 
 auth: {
   login: "Sign in",
@@ -224,7 +235,7 @@ auth: {
 
       date:
         "Date",
-
+      datePlaceholder: "Select a date",
       loading:
         "Loading expenses...",
 
@@ -278,6 +289,19 @@ auth: {
         delete:
           "Unable to delete this expense.",
       },
+      expensesFound: "expenses",
+      searchPlaceholder: "Search expenses...",
+      filterCategory: "Filter category",
+      allCategories: "All categories",
+      sortBy: "Sort by",
+      newest: "Newest",
+      oldest: "Oldest",
+      amountHigh: "Amount: High to Low",
+      amountLow: "Amount: Low to High",
+      nameAZ: "Name: A to Z",
+      nameZA: "Name: Z to A",
+      noResults: "No expenses found",
+      tryDifferentSearch: "Try a different search or filter.",
     },
 
     incomePage: {

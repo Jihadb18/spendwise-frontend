@@ -1,10 +1,31 @@
 
 import { useEffect, useState } from "react";
-import { Pencil, Plus, Trash2 } from "lucide-react";
-import { useForm } from "react-hook-form";
+
+import {
+  CalendarDays,
+  Car,
+  GraduationCap,
+  HeartPulse,
+  House,
+  MoreHorizontal,
+  Pencil,
+  Plane,
+  Plus,
+  Receipt,
+  Search,
+  ShoppingBag,
+  SlidersHorizontal,
+  Trash2,
+  Utensils,
+  X,
+} from "lucide-react";
+
+import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useTranslation } from "react-i18next";
+
+import { format, parseISO } from "date-fns";
 
 import {
   Card,
@@ -16,6 +37,30 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+
+import { Calendar } from "@/components/ui/calendar";
+
 import { toast } from "sonner";
 import api from "@/services/api";
 
@@ -29,9 +74,69 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-
 function Expenses() {
   const { t } = useTranslation();
+
+  // =========================
+  // Expense categories
+  // =========================
+
+  const expenseCategories = [
+    {
+      value: "Food",
+      labelKey: "categories.food",
+      icon: Utensils,
+    },
+    {
+      value: "Transport",
+      labelKey: "categories.transport",
+      icon: Car,
+    },
+    {
+      value: "Shopping",
+      labelKey: "categories.shopping",
+      icon: ShoppingBag,
+    },
+    {
+      value: "Housing",
+      labelKey: "categories.housing",
+      icon: House,
+    },
+    {
+      value: "Bills",
+      labelKey: "categories.bills",
+      icon: Receipt,
+    },
+    {
+      value: "Entertainment",
+      labelKey: "categories.entertainment",
+      icon: MoreHorizontal,
+    },
+    {
+      value: "Health",
+      labelKey: "categories.health",
+      icon: HeartPulse,
+    },
+    {
+      value: "Education",
+      labelKey: "categories.education",
+      icon: GraduationCap,
+    },
+    {
+      value: "Travel",
+      labelKey: "categories.travel",
+      icon: Plane,
+    },
+    {
+      value: "Other",
+      labelKey: "categories.other",
+      icon: MoreHorizontal,
+    },
+  ];
+
+  // =========================
+  // Validation
+  // =========================
 
   const expenseSchema = z.object({
     description: z
@@ -48,12 +153,16 @@ function Expenses() {
 
     category: z
       .string()
-      .min(2, t("expense.validation.category")),
+      .min(1, t("expense.validation.category")),
 
     date: z
       .string()
       .min(1, t("expense.validation.date")),
   });
+
+  // =========================
+  // State
+  // =========================
 
   const [expenses, setExpenses] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -61,18 +170,28 @@ function Expenses() {
 
   const [showForm, setShowForm] = useState(false);
   const [editingExpense, setEditingExpense] = useState(null);
+
   const [submitting, setSubmitting] = useState(false);
 
   const [deleteExpenseId, setDeleteExpenseId] = useState(null);
   const [deleting, setDeleting] = useState(false);
 
+  const [searchTerm, setSearchTerm] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("all");
+  const [sortBy, setSortBy] = useState("newest");
+  // =========================
+  // Form
+  // =========================
+
   const {
     register,
+    control,
     handleSubmit,
     reset,
     formState: { errors },
   } = useForm({
     resolver: zodResolver(expenseSchema),
+
     defaultValues: {
       description: "",
       amount: "",
@@ -80,6 +199,10 @@ function Expenses() {
       date: new Date().toISOString().split("T")[0],
     },
   });
+
+  // =========================
+  // Fetch expenses
+  // =========================
 
   const fetchExpenses = async () => {
     try {
@@ -103,6 +226,10 @@ function Expenses() {
     fetchExpenses();
   }, []);
 
+  // =========================
+  // Add form
+  // =========================
+
   const openAddForm = () => {
     setEditingExpense(null);
 
@@ -115,6 +242,10 @@ function Expenses() {
 
     setShowForm(true);
   };
+
+  // =========================
+  // Edit form
+  // =========================
 
   const openEditForm = (expense) => {
     setEditingExpense(expense);
@@ -129,6 +260,10 @@ function Expenses() {
     setShowForm(true);
   };
 
+  // =========================
+  // Close form
+  // =========================
+
   const closeForm = () => {
     setShowForm(false);
     setEditingExpense(null);
@@ -140,6 +275,10 @@ function Expenses() {
       date: new Date().toISOString().split("T")[0],
     });
   };
+
+  // =========================
+  // Submit
+  // =========================
 
   const onSubmit = async (data) => {
     try {
@@ -153,6 +292,7 @@ function Expenses() {
         date: data.date,
       };
 
+      // Update
       if (editingExpense) {
         const response = await api.put(
           `/expenses/${editingExpense.id}`,
@@ -168,7 +308,10 @@ function Expenses() {
         );
 
         toast.success(t("expense.toast.updated"));
-      } else {
+      }
+
+      // Create
+      else {
         const response = await api.post(
           "/expenses",
           expenseData
@@ -197,6 +340,10 @@ function Expenses() {
     }
   };
 
+  // =========================
+  // Delete
+  // =========================
+
   const openDeleteDialog = (id) => {
     setDeleteExpenseId(id);
   };
@@ -208,9 +355,7 @@ function Expenses() {
   };
 
   const handleDelete = async () => {
-    if (!deleteExpenseId) {
-      return;
-    }
+    if (!deleteExpenseId) return;
 
     try {
       setDeleting(true);
@@ -240,6 +385,69 @@ function Expenses() {
       setDeleting(false);
     }
   };
+ 
+const filteredExpenses = expenses
+  .filter((expense) => {
+    const search = searchTerm.trim().toLowerCase();
+
+    const description = String(expense.description ?? "").toLowerCase();
+    const category = String(expense.category ?? "").toLowerCase();
+
+    const matchesSearch =
+      !search ||
+      description.includes(search) ||
+      category.includes(search);
+
+    const matchesCategory =
+      categoryFilter === "all" ||
+      expense.category === categoryFilter;
+
+    return matchesSearch && matchesCategory;
+  })
+  .sort((a, b) => {
+    const dateA = new Date(a.date).getTime() || 0;
+    const dateB = new Date(b.date).getTime() || 0;
+    const amountA = Number(a.amount) || 0;
+    const amountB = Number(b.amount) || 0;
+    const descriptionA = String(a.description ?? "");
+    const descriptionB = String(b.description ?? "");
+
+    switch (sortBy) {
+      case "oldest":
+        return dateA - dateB;
+
+      case "amount-high":
+        return amountB - amountA;
+
+      case "amount-low":
+        return amountA - amountB;
+
+      case "az":
+        return descriptionA.localeCompare(descriptionB);
+
+      case "za":
+        return descriptionB.localeCompare(descriptionA);
+
+      case "newest":
+      default:
+        return dateB - dateA;
+    }
+  });
+
+const hasActiveFilters =
+  searchTerm.trim() !== "" ||
+  categoryFilter !== "all" ||
+  sortBy !== "newest";
+
+const resetFilters = () => {
+  setSearchTerm("");
+  setCategoryFilter("all");
+  setSortBy("newest");
+};
+
+  // =========================
+  // Loading
+  // =========================
 
   if (loading) {
     return (
@@ -250,6 +458,10 @@ function Expenses() {
       </div>
     );
   }
+
+  // =========================
+  // UI
+  // =========================
 
   return (
     <div className="space-y-6">
@@ -281,7 +493,10 @@ function Expenses() {
         </div>
       )}
 
-      {/* Add / Edit Form */}
+      {/* =========================
+          FORM
+      ========================= */}
+
       {showForm && (
         <Card>
           <CardHeader>
@@ -293,221 +508,483 @@ function Expenses() {
           </CardHeader>
 
           <CardContent>
+
             <form
-              onSubmit={handleSubmit(onSubmit)}
-              className="space-y-5"
+  onSubmit={handleSubmit(onSubmit)}
+  className="w-full space-y-5"
+>
+  {/* Row 1 */}
+  <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+
+    {/* Description */}
+    <div className="w-full space-y-2">
+      <Label htmlFor="description">
+        {t("expense.description")}
+      </Label>
+
+      <Input
+        id="description"
+        className="h-10 w-full"
+        placeholder={t("expense.descriptionPlaceholder")}
+        {...register("description")}
+      />
+
+      {errors.description && (
+        <p className="text-sm text-destructive">
+          {errors.description.message}
+        </p>
+      )}
+    </div>
+
+    {/* Amount */}
+    <div className="w-full space-y-2">
+      <Label htmlFor="amount">
+        {t("expense.amount")}
+      </Label>
+
+      <Input
+        id="amount"
+        type="number"
+        step="0.01"
+        min="0"
+        className="h-10 w-full"
+        placeholder="0.00"
+        {...register("amount")}
+      />
+
+      {errors.amount && (
+        <p className="text-sm text-destructive">
+          {errors.amount.message}
+        </p>
+      )}
+    </div>
+
+  </div>
+
+
+  {/* Row 2 */}
+  <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+
+    {/* Category */}
+    <div className="w-full space-y-2">
+      <Label htmlFor="category">
+        {t("expense.category")}
+      </Label>
+
+      <Controller
+        name="category"
+        control={control}
+        render={({ field }) => {
+          const selectedCategory =
+            expenseCategories.find(
+              (category) =>
+                category.value === field.value
+            );
+
+          const SelectedIcon =
+            selectedCategory?.icon;
+
+          return (
+            <Select
+              value={field.value}
+              onValueChange={field.onChange}
             >
+              <SelectTrigger
+                id="category"
+                className="h-10 w-full"
+              >
+                <SelectValue
+                  placeholder={t(
+                    "expense.categoryPlaceholder"
+                  )}
+                >
+                  {selectedCategory &&
+                    SelectedIcon && (
+                      <div className="flex min-w-0 items-center gap-2">
+                        <SelectedIcon className="h-4 w-4 shrink-0 text-slate-500 dark:text-slate-400" />
 
-              {/* Description */}
-              <div className="space-y-2">
-                <Label htmlFor="description">
-                  {t("expense.description")}
-                </Label>
+                        <span className="truncate">
+                          {t(
+                            selectedCategory.labelKey
+                          )}
+                        </span>
+                      </div>
+                    )}
+                </SelectValue>
+              </SelectTrigger>
 
-                <Input
-                  id="description"
-                  placeholder={t("expense.descriptionPlaceholder")}
-                  {...register("description")}
-                />
+              <SelectContent>
+                {expenseCategories.map((category) => {
+                  const Icon = category.icon;
 
-                {errors.description && (
-                  <p className="text-sm text-destructive">
-                    {errors.description.message}
-                  </p>
-                )}
-              </div>
+                  return (
+                    <SelectItem
+                      key={category.value}
+                      value={category.value}
+                    >
+                      <div className="flex items-center gap-2">
+                        <Icon className="h-4 w-4 shrink-0 text-slate-500 dark:text-slate-400" />
 
-              {/* Amount */}
-              <div className="space-y-2">
-                <Label htmlFor="amount">
-                  {t("expense.amount")}
-                </Label>
+                        <span>
+                          {t(category.labelKey)}
+                        </span>
+                      </div>
+                    </SelectItem>
+                  );
+                })}
+              </SelectContent>
+            </Select>
+          );
+        }}
+      />
 
-                <Input
-                  id="amount"
-                  type="number"
-                  step="0.01"
-                  placeholder="0.00"
-                  {...register("amount")}
-                />
+      {errors.category && (
+        <p className="text-sm text-destructive">
+          {errors.category.message}
+        </p>
+      )}
+    </div>
 
-                {errors.amount && (
-                  <p className="text-sm text-destructive">
-                    {errors.amount.message}
-                  </p>
-                )}
-              </div>
 
-              {/* Category */}
-              <div className="space-y-2">
-                <Label htmlFor="category">
-                  {t("expense.category")}
-                </Label>
+    {/* Date */}
+    <div className="w-full space-y-2">
+      <Label htmlFor="date">
+        {t("expense.date")}
+      </Label>
 
-                <Input
-                  id="category"
-                  placeholder={t("expense.categoryPlaceholder")}
-                  {...register("category")}
-                />
+      <Controller
+        name="date"
+        control={control}
+        render={({ field }) => {
+          const selectedDate = field.value
+            ? parseISO(field.value)
+            : undefined;
 
-                {errors.category && (
-                  <p className="text-sm text-destructive">
-                    {errors.category.message}
-                  </p>
-                )}
-              </div>
-
-              {/* Date */}
-              <div className="space-y-2">
-                <Label htmlFor="date">
-                  {t("expense.date")}
-                </Label>
-
-                <Input
-                  id="date"
-                  type="date"
-                  {...register("date")}
-                />
-
-                {errors.date && (
-                  <p className="text-sm text-destructive">
-                    {errors.date.message}
-                  </p>
-                )}
-              </div>
-
-              {/* Actions */}
-              <div className="flex justify-end gap-3">
+          return (
+            <Popover>
+              <PopoverTrigger asChild>
                 <Button
+                  id="date"
                   type="button"
                   variant="outline"
-                  onClick={closeForm}
+                  className="h-10 w-full justify-start text-left font-normal"
                 >
-                  {t("common.cancel")}
-                </Button>
+                  <CalendarDays className="mr-2 h-4 w-4 shrink-0" />
 
-                <Button
-                  type="submit"
-                  disabled={submitting}
-                >
-                  {submitting
-                    ? t("expense.saving")
-                    : editingExpense
-                      ? t("expense.saveChanges")
-                      : t("expense.addExpense")}
+                  <span className="truncate">
+                    {field.value
+                      ? format(
+                          selectedDate,
+                          "dd/MM/yyyy"
+                        )
+                      : t(
+                          "expense.datePlaceholder"
+                        )}
+                  </span>
                 </Button>
-              </div>
+              </PopoverTrigger>
 
-            </form>
+              <PopoverContent
+                className="w-auto p-0"
+                align="start"
+              >
+                <Calendar
+                  mode="single"
+                  selected={selectedDate}
+                  onSelect={(date) => {
+                    if (date) {
+                      field.onChange(
+                        format(
+                          date,
+                          "yyyy-MM-dd"
+                        )
+                      );
+                    }
+                  }}
+                  initialFocus
+                />
+              </PopoverContent>
+            </Popover>
+          );
+        }}
+      />
+
+      {errors.date && (
+        <p className="text-sm text-destructive">
+          {errors.date.message}
+        </p>
+      )}
+    </div>
+
+  </div>
+
+
+  {/* Buttons */}
+  <div className="flex justify-end gap-3 pt-2">
+    <Button
+      type="button"
+      variant="outline"
+      onClick={closeForm}
+    >
+      {t("common.cancel")}
+    </Button>
+
+    <Button
+      type="submit"
+      disabled={submitting}
+    >
+      {submitting
+        ? t("expense.saving")
+        : editingExpense
+          ? t("expense.saveChanges")
+          : t("expense.addExpense")}
+    </Button>
+  </div>
+</form>
           </CardContent>
         </Card>
       )}
 
-      {/* Expenses table */}
-      <Card>
-        <CardHeader>
-          <CardTitle>
-            {t("expense.allExpenses")}
-          </CardTitle>
-        </CardHeader>
+      {/* =========================
+          EXPENSES TABLE
+      ========================= */}
 
-        <CardContent>
-          {expenses.length === 0 ? (
-            <div className="flex min-h-[250px] items-center justify-center">
-              <div className="text-center">
-                <p className="font-medium">
-                  {t("expense.noExpenses")}
-                </p>
 
-                <p className="mt-1 text-sm text-muted-foreground">
-                  {t("expense.firstExpense")}
-                </p>
-              </div>
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b text-left">
-                    <th className="px-4 py-3 font-medium">
-                      {t("expense.description")}
-                    </th>
 
-                    <th className="px-4 py-3 font-medium">
-                      {t("expense.category")}
-                    </th>
+<Card className="overflow-hidden">
+  
+<CardHeader className="border-b py-4">
+  <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
+    {/* Title + count */}
+    <div className="flex shrink-0 items-center gap-2">
+      <CardTitle className="whitespace-nowrap text-base">
+        {t("expense.allExpenses")}
+      </CardTitle>
 
-                    <th className="px-4 py-3 font-medium">
-                      {t("expense.date")}
-                    </th>
+      <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
+        {filteredExpenses.length} {t("expense.expensesFound")}
+      </span>
+    </div>
 
-                    <th className="px-4 py-3 text-right font-medium">
-                      {t("expense.amount")}
-                    </th>
+    {/* Search + Filters */}
+    <div className="grid grid-cols-1 gap-2 sm:grid-cols-[minmax(140px,1fr)_145px_135px] xl:flex xl:w-auto xl:items-center">
+      {/* Search */}
+      <div className="relative min-w-0 xl:w-[190px]">
+        <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground rtl:left-auto rtl:right-2.5" />
 
-                    <th className="px-4 py-3 text-right font-medium">
-                      {t("common.actions")}
-                    </th>
-                  </tr>
-                </thead>
+        <Input
+          value={searchTerm}
+          onChange={(event) => setSearchTerm(event.target.value)}
+          placeholder={t("expense.searchPlaceholder")}
+          aria-label={t("expense.searchPlaceholder")}
+          className="h-8 w-full pl-8 text-xs rtl:pl-2 rtl:pr-8"
+        />
+      </div>
 
-                <tbody>
-                  {expenses.map((expense) => (
-                    <tr
-                      key={expense.id}
-                      className="border-b last:border-0"
-                    >
-                      <td className="px-4 py-4 font-medium">
-                        {expense.description}
-                      </td>
+      {/* Category */}
+      <Select
+        value={categoryFilter}
+        onValueChange={setCategoryFilter}
+      >
+        <SelectTrigger className="h-8 w-full text-xs xl:w-[145px]">
+          <SelectValue placeholder={t("expense.filterCategory")} />
+        </SelectTrigger>
 
-                      <td className="px-4 py-4 text-muted-foreground">
-                        {expense.category}
-                      </td>
+        <SelectContent>
+          <SelectItem value="all">
+            {t("expense.allCategories")}
+          </SelectItem>
 
-                      <td className="px-4 py-4 text-muted-foreground">
-                        {expense.date}
-                      </td>
+          {expenseCategories.map((category) => {
+            const Icon = category.icon;
 
-                      <td className="px-4 py-4 text-right font-semibold">
-                        {Number(expense.amount).toFixed(2)} MAD
-                      </td>
+            return (
+              <SelectItem key={category.value} value={category.value}>
+                <div className="flex items-center gap-2">
+                  <Icon className="h-3.5 w-3.5 shrink-0" />
+                  <span>{t(category.labelKey)}</span>
+                </div>
+              </SelectItem>
+            );
+          })}
+        </SelectContent>
+      </Select>
 
-                      <td className="px-4 py-4 text-right">
-                        <div className="flex justify-end gap-1">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() =>
-                              openEditForm(expense)
-                            }
-                            aria-label={t("common.edit")}
-                          >
-                            <Pencil className="h-4 w-4" />
-                          </Button>
+      {/* Sort */}
+      <Select value={sortBy} onValueChange={setSortBy}>
+        <SelectTrigger className="h-8 w-full text-xs xl:w-[135px]">
+          <SelectValue placeholder={t("expense.sortBy")} />
+        </SelectTrigger>
 
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() =>
-                              openDeleteDialog(expense.id)
-                            }
-                            aria-label={t("common.delete")}
-                          >
-                            <Trash2 className="h-4 w-4 text-destructive" />
-                          </Button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+        <SelectContent>
+          <SelectItem value="newest">{t("expense.newest")}</SelectItem>
+          <SelectItem value="oldest">{t("expense.oldest")}</SelectItem>
+          <SelectItem value="amount-high">{t("expense.amountHigh")}</SelectItem>
+          <SelectItem value="amount-low">{t("expense.amountLow")}</SelectItem>
+          <SelectItem value="az">{t("expense.nameAZ")}</SelectItem>
+          <SelectItem value="za">{t("expense.nameZA")}</SelectItem>
+        </SelectContent>
+      </Select>
+    </div>
+  </div>
+</CardHeader>
 
-      {/* Delete Confirmation */}
+
+  <CardContent className="p-0">
+    {filteredExpenses.length === 0 ? (
+      <div className="flex flex-col items-center justify-center px-4 py-14 text-center">
+        <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-muted">
+          <Search className="h-5 w-5 text-muted-foreground" />
+        </div>
+
+        <p className="font-medium">
+          {t("expense.noResults")}
+        </p>
+
+        <p className="mt-1 max-w-sm text-sm text-muted-foreground">
+          {t("expense.tryDifferentSearch")}
+        </p>
+
+        {hasActiveFilters && (
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="mt-4"
+            onClick={resetFilters}
+          >
+            {t("expense.resetFilters", {
+              defaultValue: "Reset filters",
+            })}
+          </Button>
+        )}
+      </div>
+    ) : (
+      <div className="w-full overflow-x-auto">
+        <Table>
+          <TableHeader>
+            <TableRow className="bg-muted/30 hover:bg-muted/30">
+              <TableHead className="h-12 min-w-[180px] px-4 sm:px-6">
+                {t("expense.description")}
+              </TableHead>
+
+              <TableHead className="h-12 min-w-[140px]">
+                {t("expense.category")}
+              </TableHead>
+
+              <TableHead className="h-12 min-w-[120px]">
+                {t("expense.date")}
+              </TableHead>
+
+              <TableHead className="h-12 min-w-[130px] text-right">
+                {t("expense.amount")}
+              </TableHead>
+
+              <TableHead className="h-12 min-w-[100px] text-right">
+                {t("common.actions")}
+              </TableHead>
+            </TableRow>
+          </TableHeader>
+
+          <TableBody>
+            {filteredExpenses.map((expense) => {
+              const category = expenseCategories.find(
+                (item) => item.value === expense.category
+              );
+
+              const CategoryIcon =
+                category?.icon ?? MoreHorizontal;
+
+              const expenseDate = expense.date
+                ? parseISO(expense.date)
+                : null;
+
+              const validDate =
+                expenseDate &&
+                !Number.isNaN(expenseDate.getTime());
+
+              return (
+                <TableRow
+                  key={expense.id}
+                  className="transition-colors hover:bg-muted/40"
+                >
+                  {/* Description */}
+                  <TableCell className="max-w-[260px] px-4 py-4 sm:px-6">
+                    <span className="block truncate font-medium">
+                      {expense.description}
+                    </span>
+                  </TableCell>
+
+                  {/* Category */}
+                  <TableCell>
+                    <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-muted px-2.5 py-1 text-xs font-medium">
+                      <CategoryIcon className="h-3.5 w-3.5 shrink-0" />
+
+                      {category
+                        ? t(category.labelKey)
+                        : expense.category}
+                    </span>
+                  </TableCell>
+
+                  {/* Date */}
+                  <TableCell className="whitespace-nowrap text-sm text-muted-foreground">
+                    {validDate
+                      ? format(expenseDate, "dd/MM/yyyy")
+                      : "—"}
+                  </TableCell>
+
+                  {/* Amount */}
+                  <TableCell className="whitespace-nowrap text-right">
+                    <span className="font-semibold tabular-nums">
+                      −{(Number(expense.amount) || 0).toFixed(2)} MAD
+                    </span>
+                  </TableCell>
+
+                  {/* Actions */}
+                  <TableCell>
+                    <div className="flex justify-end gap-1">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8"
+                        onClick={() => openEditForm(expense)}
+                        title={t("common.edit")}
+                        aria-label={t("common.edit")}
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8"
+                        onClick={() =>
+                          openDeleteDialog(expense.id)
+                        }
+                        title={t("common.delete")}
+                        aria-label={t("common.delete")}
+                      >
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              );
+            })}
+          </TableBody>
+        </Table>
+      </div>
+    )}
+  </CardContent>
+</Card>
+
+
+      {/* =========================
+          DELETE DIALOG
+      ========================= */}
+
       <AlertDialog
         open={deleteExpenseId !== null}
         onOpenChange={(open) => {
@@ -517,6 +994,7 @@ function Expenses() {
         }}
       >
         <AlertDialogContent>
+
           <AlertDialogHeader>
             <AlertDialogTitle>
               {t("expense.deleteExpense")}
@@ -528,6 +1006,7 @@ function Expenses() {
           </AlertDialogHeader>
 
           <AlertDialogFooter>
+
             <AlertDialogCancel
               disabled={deleting}
               onClick={closeDeleteDialog}
@@ -547,7 +1026,9 @@ function Expenses() {
                 ? t("expense.deleting")
                 : t("common.delete")}
             </AlertDialogAction>
+
           </AlertDialogFooter>
+
         </AlertDialogContent>
       </AlertDialog>
 
